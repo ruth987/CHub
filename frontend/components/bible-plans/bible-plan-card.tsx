@@ -19,7 +19,7 @@ interface BiblePlanCardProps {
 
 export function BiblePlanCard({ plan }: BiblePlanCardProps) {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden bg-gray-800 border-gray-700 hover:border-yellow-400/50 transition-colors">
       <div className="relative h-48 w-full">
         <Image
           src={plan.image}
@@ -27,19 +27,22 @@ export function BiblePlanCard({ plan }: BiblePlanCardProps) {
           fill
           className="object-cover"
         />
+        <div className="absolute inset-0 bg-black/40" /> {/* Dark overlay */}
       </div>
       <CardHeader>
-        <CardTitle>{plan.title}</CardTitle>
+        <CardTitle className="text-white">{plan.title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600">{plan.description}</p>
-        <div className="mt-2 flex items-center text-sm text-gray-500">
+        <p className="text-sm text-gray-400">{plan.description}</p>
+        <div className="mt-2 flex items-center text-sm text-yellow-400">
           <span>Duration: {plan.duration}</span>
         </div>
       </CardContent>
       <CardFooter>
         <BiblePlanDialog plan={plan}>
-          <Button className="w-full">Learn More</Button>
+          <Button className="w-full bg-yellow-500 text-gray-900 hover:bg-yellow-400">
+            Learn More
+          </Button>
         </BiblePlanDialog>
       </CardFooter>
     </Card>
