@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	httpDelivery "github.com/ruth987/CHub.git/internal/delivery/http"
 	"github.com/ruth987/CHub.git/internal/delivery/http/handler"
 	"github.com/ruth987/CHub.git/internal/repository/postgres"
 	"github.com/ruth987/CHub.git/internal/usecase"
@@ -40,26 +41,26 @@ func main() {
 
 	// Initialize repositories
 	userRepo := postgres.NewUserRepository(db)
+	postRepo := postgres.NewPostRepository(db)
+	commentRepo := postgres.NewCommentRepository(db)
 
 	// Initialize usecases
 	userUsecase := usecase.NewUserUsecase(userRepo, jwtService)
+	postUsecase := usecase.NewPostUsecase(postRepo, commentRepo)
+	commentUsecase := usecase.NewCommentUsecase(commentRepo, postRepo)
 
 	// Initialize handlers
 	userHandler := handler.NewUserHandler(userUsecase)
+	postHandler := handler.NewPostHandler(postUsecase)
+	commentHandler := handler.NewCommentHandler(commentUsecase)
 
 	// Setup router
-	router := gin.Default()
-
-	// User routes
-	router.POST("/api/register", userHandler.Register)
-	router.POST("/api/login", userHandler.Login)
-
-	// Protected routes
-	authorized := router.Group("/api")
-	authorized.Use(authMiddleware(jwtService))
-	{
-		authorized.GET("/profile", userHandler.GetProfile)
-	}
+	router := httpDelivery.NewRouter(
+		userHandler,
+		postHandler,
+		commentHandler,
+		authMiddleware(jwtService),
+	)
 
 	router.Run(":8080")
 }

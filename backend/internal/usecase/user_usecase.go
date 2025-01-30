@@ -103,7 +103,7 @@ func (u *userUsecase) UpdateProfile(user *domain.User) error {
 		return err
 	}
 
-	user.Password = existingUser.Password // Keep the existing password
+	user.Password = existingUser.Password 
 	user.UpdatedAt = time.Now()
 
 	return u.userRepo.Update(user)
