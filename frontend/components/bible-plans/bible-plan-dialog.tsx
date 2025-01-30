@@ -26,10 +26,10 @@ import {
         <DialogTrigger asChild>
           {children}
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[625px]">
+        <DialogContent className="sm:max-w-[625px] bg-gray-800 border-gray-700">
           <DialogHeader>
-            <DialogTitle>{plan.title}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white">{plan.title}</DialogTitle>
+            <DialogDescription className="text-yellow-400">
               Duration: {plan.duration}
             </DialogDescription>
           </DialogHeader>
@@ -40,16 +40,17 @@ import {
               fill
               className="object-cover rounded-md"
             />
+            <div className="absolute inset-0 bg-black/40" />
           </div>
           <div className="mt-4">
-            <p className="text-gray-700">{plan.longDescription}</p>
+            <p className="text-gray-300">{plan.longDescription}</p>
             <div className="mt-4">
-              <h4 className="font-semibold mb-2">Topics covered:</h4>
+              <h4 className="font-semibold mb-2 text-white">Topics covered:</h4>
               <div className="flex flex-wrap gap-2">
                 {plan.topics.map((topic) => (
                   <span
                     key={topic}
-                    className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm"
+                    className="px-2 py-1 bg-gray-700 text-yellow-400 rounded-full text-sm border border-gray-600"
                   >
                     {topic}
                   </span>
@@ -58,7 +59,9 @@ import {
             </div>
           </div>
           <div className="mt-4 flex justify-end">
-            <Button>Start This Plan</Button>
+            <Button className="bg-yellow-500 text-gray-900 hover:bg-yellow-400">
+              Start This Plan
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

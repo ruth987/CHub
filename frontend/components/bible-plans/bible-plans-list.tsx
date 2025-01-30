@@ -59,7 +59,7 @@ const BIBLE_PLANS = [
 
 export function BiblePlansList() {
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className=" mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 bg-gray-900">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {BIBLE_PLANS.map((plan) => (
           <BiblePlanCard key={plan.id} plan={plan} />
