@@ -38,7 +38,7 @@ export function Hero() {
             size="lg"
             className="bg-yellow-500 text-black hover:bg-yellow-400"
           >
-            <Link href="/register">Start Your Journey</Link>
+            <Link href="/signup">Start Your Journey</Link>
           </Button>
           <Button
             asChild
