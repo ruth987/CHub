@@ -46,7 +46,7 @@ export function Navbar() {
                   <Link href="/devotionals" className="block p-2 hover:bg-accent rounded-md">
                     Daily Devotionals
                   </Link>
-                  <Link href="/questions" className="block p-2 hover:bg-accent rounded-md">
+                  <Link href="/posts" className="block p-2 hover:bg-accent rounded-md">
                     Ask Questions
                   </Link>
                   <Link href="/study-groups" className="block p-2 hover:bg-accent rounded-md">

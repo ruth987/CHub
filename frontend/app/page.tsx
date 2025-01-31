@@ -9,7 +9,7 @@ import { Footer } from "@/components/layout/footer";
 export default function Home() {
   return (
     
-    <main>
+    <main className="bg-gray-900">
     <Hero />
     <Features />
     <ExploreBiblePlans />
