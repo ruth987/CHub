@@ -18,8 +18,8 @@ func NewPostHandler(pu domain.PostUsecase) *PostHandler {
 	}
 }
 
-// CreatePost handles post creation
-func (h *PostHandler) CreatePost(c *gin.Context) {
+// Create handles post creation
+func (h *PostHandler) Create(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -32,7 +32,7 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	post, err := h.postUsecase.CreatePost(userID.(uint), &req)
+	post, err := h.postUsecase.Create(userID.(uint), &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -41,29 +41,29 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 	c.JSON(http.StatusCreated, post)
 }
 
-// GetPost handles getting a single post
-func (h *PostHandler) GetPost(c *gin.Context) {
+// GetByID handles getting a single post
+func (h *PostHandler) GetByID(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post id"})
 		return
 	}
 
-	post, err := h.postUsecase.GetPost(uint(id))
+	post, err := h.postUsecase.GetByID(uint(id))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "post not found"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, post)
 }
 
-// GetAllPosts handles getting all posts with pagination
-func (h *PostHandler) GetAllPosts(c *gin.Context) {
+// GetAll handles getting all posts with pagination
+func (h *PostHandler) GetAll(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
-	posts, err := h.postUsecase.GetAllPosts(page, limit)
+	posts, err := h.postUsecase.GetAll(page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -72,8 +72,8 @@ func (h *PostHandler) GetAllPosts(c *gin.Context) {
 	c.JSON(http.StatusOK, posts)
 }
 
-// UpdatePost handles post updates
-func (h *PostHandler) UpdatePost(c *gin.Context) {
+// Update handles post updates
+func (h *PostHandler) Update(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -86,13 +86,13 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	var req domain.CreatePostRequest
+	var req domain.UpdatePostRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	post, err := h.postUsecase.UpdatePost(userID.(uint), uint(postID), &req)
+	post, err := h.postUsecase.Update(userID.(uint), uint(postID), &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -101,8 +101,8 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 	c.JSON(http.StatusOK, post)
 }
 
-// DeletePost handles post deletion
-func (h *PostHandler) DeletePost(c *gin.Context) {
+// Delete handles post deletion
+func (h *PostHandler) Delete(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -115,8 +115,7 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
 		return
 	}
 
-	err = h.postUsecase.DeletePost(userID.(uint), uint(postID))
-	if err != nil {
+	if err := h.postUsecase.Delete(userID.(uint), uint(postID)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -124,19 +123,46 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "post deleted successfully"})
 }
 
-// GetUserPosts handles getting all posts for a specific user
-func (h *PostHandler) GetUserPosts(c *gin.Context) {
-	userID, err := strconv.ParseUint(c.Param("user_id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+// Like handles post liking
+func (h *PostHandler) Like(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
 
-	posts, err := h.postUsecase.GetUserPosts(uint(userID))
+	postID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post id"})
+		return
+	}
+
+	if err := h.postUsecase.Like(userID.(uint), uint(postID)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, posts)
+	c.JSON(http.StatusOK, gin.H{"message": "post liked successfully"})
+}
+
+// Unlike handles post unliking
+func (h *PostHandler) Unlike(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	postID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post id"})
+		return
+	}
+
+	if err := h.postUsecase.Unlike(userID.(uint), uint(postID)); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "post unliked successfully"})
 }

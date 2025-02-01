@@ -19,11 +19,13 @@ func NewPostUsecase(pr domain.PostRepository, cr domain.CommentRepository) domai
 	}
 }
 
-func (u *postUsecase) CreatePost(userID uint, req *domain.CreatePostRequest) (*domain.Post, error) {
+func (u *postUsecase) Create(userID uint, req *domain.CreatePostRequest) (*domain.Post, error) {
 	now := time.Now()
 	post := &domain.Post{
 		Title:     req.Title,
 		Content:   req.Content,
+		ImageURL:  req.ImageURL,
+		LinkURL:   req.LinkURL,
 		UserID:    userID,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -34,54 +36,49 @@ func (u *postUsecase) CreatePost(userID uint, req *domain.CreatePostRequest) (*d
 		return nil, err
 	}
 
+	// Add tags if provided
+	if len(req.Tags) > 0 {
+		err = u.postRepo.AddTags(post.ID, req.Tags)
+		if err != nil {
+			return nil, err
+		}
+		post.Tags = req.Tags
+	}
+
 	return post, nil
 }
 
-func (u *postUsecase) GetPost(id uint) (*domain.Post, error) {
+func (u *postUsecase) GetByID(id uint) (*domain.Post, error) {
 	post, err := u.postRepo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get comments for the post
-	comments, err := u.commentRepo.GetByPostID(id)
+	// Get tags
+	tags, err := u.postRepo.GetTags(id)
 	if err != nil {
 		return nil, err
 	}
+	post.Tags = tags
 
-	// Organize comments into a tree structure
-	commentMap := make(map[uint][]domain.Comment)
-	var rootComments []domain.Comment
-
-	for _, comment := range comments {
-		if comment.ParentID == nil {
-			rootComments = append(rootComments, comment)
-		} else {
-			parentID := *comment.ParentID
-			commentMap[parentID] = append(commentMap[parentID], comment)
-		}
+	// Get likes count
+	likes, err := u.postRepo.GetLikes(id)
+	if err != nil {
+		return nil, err
 	}
+	post.Likes = likes
 
-	// Recursively attach replies
-	for i := range rootComments {
-		attachReplies(&rootComments[i], commentMap)
+	// Get comments
+	comments, err := u.commentRepo.GetByPostID(id, 1, 100) // First 100 comments
+	if err != nil {
+		return nil, err
 	}
+	post.Comments = comments
 
-	post.Comments = rootComments
 	return post, nil
 }
 
-func attachReplies(comment *domain.Comment, commentMap map[uint][]domain.Comment) {
-	replies := commentMap[comment.ID]
-	if len(replies) > 0 {
-		comment.Replies = replies
-		for i := range comment.Replies {
-			attachReplies(&comment.Replies[i], commentMap)
-		}
-	}
-}
-
-func (u *postUsecase) GetAllPosts(page, limit int) ([]domain.Post, error) {
+func (u *postUsecase) GetAll(page, limit int) ([]domain.Post, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -89,14 +86,32 @@ func (u *postUsecase) GetAllPosts(page, limit int) ([]domain.Post, error) {
 		limit = 10
 	}
 
-	return u.postRepo.GetAll(page, limit)
+	posts, err := u.postRepo.GetAll(page, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	// Enrich posts with tags and likes
+	for i := range posts {
+		tags, err := u.postRepo.GetTags(posts[i].ID)
+		if err == nil {
+			posts[i].Tags = tags
+		}
+
+		likes, err := u.postRepo.GetLikes(posts[i].ID)
+		if err == nil {
+			posts[i].Likes = likes
+		}
+	}
+
+	return posts, nil
 }
 
-func (u *postUsecase) GetUserPosts(userID uint) ([]domain.Post, error) {
+func (u *postUsecase) GetByUserID(userID uint) ([]domain.Post, error) {
 	return u.postRepo.GetByUserID(userID)
 }
 
-func (u *postUsecase) UpdatePost(userID uint, postID uint, req *domain.CreatePostRequest) (*domain.Post, error) {
+func (u *postUsecase) Update(userID uint, postID uint, req *domain.UpdatePostRequest) (*domain.Post, error) {
 	post, err := u.postRepo.GetByID(postID)
 	if err != nil {
 		return nil, err
@@ -106,8 +121,18 @@ func (u *postUsecase) UpdatePost(userID uint, postID uint, req *domain.CreatePos
 		return nil, errors.New("unauthorized to update this post")
 	}
 
-	post.Title = req.Title
-	post.Content = req.Content
+	if req.Title != "" {
+		post.Title = req.Title
+	}
+	if req.Content != "" {
+		post.Content = req.Content
+	}
+	if req.ImageURL != "" {
+		post.ImageURL = req.ImageURL
+	}
+	if req.LinkURL != "" {
+		post.LinkURL = req.LinkURL
+	}
 	post.UpdatedAt = time.Now()
 
 	err = u.postRepo.Update(post)
@@ -115,10 +140,19 @@ func (u *postUsecase) UpdatePost(userID uint, postID uint, req *domain.CreatePos
 		return nil, err
 	}
 
+	// Update tags if provided
+	if len(req.Tags) > 0 {
+		err = u.postRepo.AddTags(post.ID, req.Tags)
+		if err != nil {
+			return nil, err
+		}
+		post.Tags = req.Tags
+	}
+
 	return post, nil
 }
 
-func (u *postUsecase) DeletePost(userID uint, postID uint) error {
+func (u *postUsecase) Delete(userID uint, postID uint) error {
 	post, err := u.postRepo.GetByID(postID)
 	if err != nil {
 		return err
@@ -129,4 +163,12 @@ func (u *postUsecase) DeletePost(userID uint, postID uint) error {
 	}
 
 	return u.postRepo.Delete(postID)
+}
+
+func (u *postUsecase) Like(userID uint, postID uint) error {
+	return u.postRepo.AddLike(postID, userID)
+}
+
+func (u *postUsecase) Unlike(userID uint, postID uint) error {
+	return u.postRepo.RemoveLike(postID, userID)
 }
