@@ -18,8 +18,8 @@ func NewCommentHandler(cu domain.CommentUsecase) *CommentHandler {
 	}
 }
 
-// CreateComment handles comment creation
-func (h *CommentHandler) CreateComment(c *gin.Context) {
+// Create handles comment creation
+func (h *CommentHandler) Create(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -38,7 +38,7 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 		return
 	}
 
-	comment, err := h.commentUsecase.CreateComment(userID.(uint), uint(postID), &req)
+	comment, err := h.commentUsecase.Create(userID.(uint), uint(postID), &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -47,15 +47,18 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 	c.JSON(http.StatusCreated, comment)
 }
 
-// GetPostComments handles getting all comments for a post
-func (h *CommentHandler) GetPostComments(c *gin.Context) {
+// GetByPostID handles getting comments for a post
+func (h *CommentHandler) GetByPostID(c *gin.Context) {
 	postID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post id"})
 		return
 	}
 
-	comments, err := h.commentUsecase.GetPostComments(uint(postID))
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	comments, err := h.commentUsecase.GetByPostID(uint(postID), page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -64,8 +67,8 @@ func (h *CommentHandler) GetPostComments(c *gin.Context) {
 	c.JSON(http.StatusOK, comments)
 }
 
-// UpdateComment handles comment updates
-func (h *CommentHandler) UpdateComment(c *gin.Context) {
+// Update handles comment updates
+func (h *CommentHandler) Update(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -78,15 +81,13 @@ func (h *CommentHandler) UpdateComment(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		Content string `json:"content" binding:"required"`
-	}
+	var req domain.UpdateCommentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	comment, err := h.commentUsecase.UpdateComment(userID.(uint), uint(commentID), req.Content)
+	comment, err := h.commentUsecase.Update(userID.(uint), uint(commentID), &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -95,8 +96,8 @@ func (h *CommentHandler) UpdateComment(c *gin.Context) {
 	c.JSON(http.StatusOK, comment)
 }
 
-// DeleteComment handles comment deletion
-func (h *CommentHandler) DeleteComment(c *gin.Context) {
+// Delete handles comment deletion
+func (h *CommentHandler) Delete(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
@@ -109,8 +110,7 @@ func (h *CommentHandler) DeleteComment(c *gin.Context) {
 		return
 	}
 
-	err = h.commentUsecase.DeleteComment(userID.(uint), uint(commentID))
-	if err != nil {
+	if err := h.commentUsecase.Delete(userID.(uint), uint(commentID)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
