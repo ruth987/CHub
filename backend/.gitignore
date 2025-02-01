@@ -1,0 +1,10 @@
+# Project specific
+backend/uploads/
+backend/tmp/
+backend/logs/
+backend/.env
+backend/config/local.yaml
+
+# Database
+*.sql
+pgdata/
