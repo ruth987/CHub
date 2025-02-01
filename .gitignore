@@ -1,0 +1,25 @@
+# Project specific
+backend/uploads/
+backend/tmp/
+backend/logs/
+backend/config/local.yaml
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/.nuxt/
+frontend/dist/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Database
+*.sql
+pgdata/
+
+# Development certificates
+*.pem
+*.crt
+*.key
