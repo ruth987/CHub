@@ -13,11 +13,34 @@ func NewRouter(
 ) *gin.Engine {
 	router := gin.Default()
 
+	// Serve static files
+	router.Static("/uploads", "./uploads")
+
 	api := router.Group("/api")
 	{
-		// User routes
+		// Public routes
 		api.POST("/register", userHandler.Register)
 		api.POST("/login", userHandler.Login)
+
+		// Posts routes
+		posts := api.Group("/posts")
+		{
+			// Public post routes
+			posts.GET("", postHandler.GetAll)
+			posts.GET("/:id", postHandler.GetByID)
+			posts.GET("/:id/comments", commentHandler.GetByPostID)
+
+			// Protected post routes
+			protected := posts.Use(authMiddleware)
+			{
+				protected.POST("", postHandler.Create)
+				protected.PUT("/:id", postHandler.Update)
+				protected.DELETE("/:id", postHandler.Delete)
+				protected.POST("/:id/like", postHandler.Like)
+				protected.DELETE("/:id/like", postHandler.Unlike)
+				protected.POST("/:id/comments", commentHandler.Create)
+			}
+		}
 
 		// Protected routes
 		protected := api.Group("")
@@ -25,29 +48,15 @@ func NewRouter(
 		{
 			// User routes
 			protected.GET("/profile", userHandler.GetProfile)
+			protected.PUT("/profile", userHandler.UpdateProfile)
+			protected.GET("/users/:user_id/posts", userHandler.GetUserPosts)
 
-			// Post routes
-			protected.POST("/posts", postHandler.CreatePost)
-			protected.PUT("/posts/:id", postHandler.UpdatePost)
-			protected.DELETE("/posts/:id", postHandler.DeletePost)
-		}
-
-		// Public post routes
-		api.GET("/posts", postHandler.GetAllPosts)
-		api.GET("/users/:user_id/posts", postHandler.GetUserPosts)
-
-		// Single post and its comments
-		api.GET("/posts/:id", postHandler.GetPost)
-
-		// Post comments
-		api.GET("/posts/:id/comments", commentHandler.GetPostComments)
-		protected.POST("/posts/:id/comments", commentHandler.CreateComment)
-
-		// Comment management
-		comments := protected.Group("/comments")
-		{
-			comments.PUT("/:id", commentHandler.UpdateComment)
-			comments.DELETE("/:id", commentHandler.DeleteComment)
+			// Comment routes
+			comments := protected.Group("/comments")
+			{
+				comments.PUT("/:id", commentHandler.Update)
+				comments.DELETE("/:id", commentHandler.Delete)
+			}
 		}
 	}
 

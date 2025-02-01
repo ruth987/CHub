@@ -34,7 +34,11 @@ func (r *userRepository) Create(user *domain.User) error {
 func (r *userRepository) GetByID(id uint) (*domain.User, error) {
 	user := &domain.User{}
 	query := `
-        SELECT id, username, email, password, created_at, updated_at 
+        SELECT id, username, email, password, 
+               COALESCE(bio, '') as bio,
+               COALESCE(avatar_url, '') as avatar_url,
+               COALESCE(post_count, 0) as post_count,
+               created_at, updated_at 
         FROM users WHERE id = $1`
 
 	err := r.db.QueryRow(query, id).Scan(
@@ -42,6 +46,9 @@ func (r *userRepository) GetByID(id uint) (*domain.User, error) {
 		&user.Username,
 		&user.Email,
 		&user.Password,
+		&user.Bio,
+		&user.AvatarURL,
+		&user.PostCount,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -49,7 +56,6 @@ func (r *userRepository) GetByID(id uint) (*domain.User, error) {
 	if err == sql.ErrNoRows {
 		return nil, errors.New("user not found")
 	}
-
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +66,11 @@ func (r *userRepository) GetByID(id uint) (*domain.User, error) {
 func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 	user := &domain.User{}
 	query := `
-        SELECT id, username, email, password, created_at, updated_at 
+        SELECT id, username, email, password, 
+               COALESCE(bio, '') as bio,
+               COALESCE(avatar_url, '') as avatar_url,
+               COALESCE(post_count, 0) as post_count,
+               created_at, updated_at 
         FROM users WHERE email = $1`
 
 	err := r.db.QueryRow(query, email).Scan(
@@ -68,6 +78,9 @@ func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 		&user.Username,
 		&user.Email,
 		&user.Password,
+		&user.Bio,
+		&user.AvatarURL,
+		&user.PostCount,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -75,7 +88,6 @@ func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 	if err == sql.ErrNoRows {
 		return nil, errors.New("user not found")
 	}
-
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +98,7 @@ func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 func (r *userRepository) GetByUsername(username string) (*domain.User, error) {
 	user := &domain.User{}
 	query := `
-        SELECT id, username, email, password, created_at, updated_at 
+        SELECT id, username, email, password, bio, avatar_url, post_count, created_at, updated_at 
         FROM users WHERE username = $1`
 
 	err := r.db.QueryRow(query, username).Scan(
@@ -94,6 +106,9 @@ func (r *userRepository) GetByUsername(username string) (*domain.User, error) {
 		&user.Username,
 		&user.Email,
 		&user.Password,
+		&user.Bio,
+		&user.AvatarURL,
+		&user.PostCount,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -101,25 +116,22 @@ func (r *userRepository) GetByUsername(username string) (*domain.User, error) {
 	if err == sql.ErrNoRows {
 		return nil, errors.New("user not found")
 	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return user, err
 }
 
 func (r *userRepository) Update(user *domain.User) error {
 	query := `
         UPDATE users 
-        SET username = $1, email = $2, password = $3, updated_at = $4
-        WHERE id = $5`
+        SET username = $1, email = $2, password = $3, bio = $4, avatar_url = $5, updated_at = $6
+        WHERE id = $7`
 
 	result, err := r.db.Exec(
 		query,
 		user.Username,
 		user.Email,
 		user.Password,
+		user.Bio,
+		user.AvatarURL,
 		user.UpdatedAt,
 		user.ID,
 	)
@@ -128,34 +140,60 @@ func (r *userRepository) Update(user *domain.User) error {
 		return err
 	}
 
-	rowsAffected, err := result.RowsAffected()
+	rows, err := result.RowsAffected()
 	if err != nil {
 		return err
 	}
 
-	if rowsAffected == 0 {
+	if rows == 0 {
 		return errors.New("user not found")
 	}
-
 	return nil
 }
 
-func (r *userRepository) Delete(id uint) error {
-	query := `DELETE FROM users WHERE id = $1`
+func (r *userRepository) GetUserPosts(userID uint, page, limit int) ([]domain.Post, error) {
+	offset := (page - 1) * limit
+	query := `
+        SELECT id, title, content, image_url, link_url, user_id, likes, created_at, updated_at
+        FROM posts
+        WHERE user_id = $1
+        ORDER BY created_at DESC
+        LIMIT $2 OFFSET $3`
 
-	result, err := r.db.Exec(query, id)
+	rows, err := r.db.Query(query, userID, limit, offset)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	defer rows.Close()
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
+	var posts []domain.Post
+	for rows.Next() {
+		var post domain.Post
+		err := rows.Scan(
+			&post.ID,
+			&post.Title,
+			&post.Content,
+			&post.ImageURL,
+			&post.LinkURL,
+			&post.UserID,
+			&post.Likes,
+			&post.CreatedAt,
+			&post.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
 	}
+	return posts, nil
+}
 
-	if rowsAffected == 0 {
-		return errors.New("user not found")
-	}
+func (r *userRepository) UpdatePostCount(userID uint) error {
+	query := `
+        UPDATE users 
+        SET post_count = (SELECT COUNT(*) FROM posts WHERE user_id = $1)
+        WHERE id = $1`
 
-	return nil
+	_, err := r.db.Exec(query, userID)
+	return err
 }
