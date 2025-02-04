@@ -16,6 +16,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useSignup } from "@/hooks/auth"
 
 const formSchema = z.object({
   username: z.string()
@@ -33,6 +35,9 @@ const formSchema = z.object({
 })
 
 export function SignUpForm() {
+  const router = useRouter();
+  const { mutate: signup, isPending } = useSignup();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,8 +50,18 @@ export function SignUpForm() {
   })
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    // Handle signup logic here
+    signup(
+      {
+        username: values.username,
+        email: values.email,
+        password: values.password,
+      },
+      {
+        onSuccess: () => {
+          router.push('/login')
+        }
+      }
+    )
   }
 
   return (
