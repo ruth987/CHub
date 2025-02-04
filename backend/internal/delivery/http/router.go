@@ -1,7 +1,9 @@
 package http
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
 	"github.com/ruth987/CHub.git/internal/delivery/http/handler"
 )
 
@@ -12,6 +14,16 @@ func NewRouter(
 	authMiddleware gin.HandlerFunc,
 ) *gin.Engine {
 	router := gin.Default()
+
+	// CORS configuration
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * 60 * 60,
+	}))
 
 	// Serve static files
 	router.Static("/uploads", "./uploads")
