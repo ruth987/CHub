@@ -26,7 +26,7 @@ func (u *postUsecase) Create(userID uint, req *domain.CreatePostRequest) (*domai
 		Content:   req.Content,
 		ImageURL:  req.ImageURL,
 		LinkURL:   req.LinkURL,
-		UserID:    userID,
+		User:      &domain.User{ID: userID},
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -117,7 +117,7 @@ func (u *postUsecase) Update(userID uint, postID uint, req *domain.UpdatePostReq
 		return nil, err
 	}
 
-	if post.UserID != userID {
+	if post.User.ID != userID {
 		return nil, errors.New("unauthorized to update this post")
 	}
 
@@ -158,7 +158,7 @@ func (u *postUsecase) Delete(userID uint, postID uint) error {
 		return err
 	}
 
-	if post.UserID != userID {
+	if post.User.ID != userID {
 		return errors.New("unauthorized to delete this post")
 	}
 

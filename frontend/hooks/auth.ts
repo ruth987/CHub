@@ -1,7 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import api from '@/lib/axios';
-import { LoginRequest, RegisterRequest, LoginResponse } from '@/types/auth';
+import { LoginRequest, RegisterRequest, LoginResponse, User } from '@/types/auth';
+import { useEffect, useState } from 'react';
 
 
 export const useLogin = () => {
@@ -48,3 +49,28 @@ export const useSignup = () => {
     });
 };
 
+export const useLogout = () => {
+    return useMutation({
+        mutationFn: async () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        },
+    });
+};
+
+
+export const useUser = () => {
+    const [user, setUser] = useState<User | null>(null)
+  
+    useEffect(() => {
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        setUser(JSON.parse(userStr))
+      }
+    }, [])
+  
+    return { user }
+  }
+
+
+  

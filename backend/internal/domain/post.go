@@ -8,7 +8,6 @@ type Post struct {
 	Content   string    `json:"content"`
 	ImageURL  string    `json:"image_url,omitempty"`
 	LinkURL   string    `json:"link_url,omitempty"`
-	UserID    uint      `json:"user_id"`
 	Likes     int       `json:"likes"`
 	User      *User     `json:"user,omitempty"`
 	Tags      []string  `json:"tags,omitempty"`
