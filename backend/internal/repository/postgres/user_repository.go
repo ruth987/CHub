@@ -154,10 +154,19 @@ func (r *userRepository) Update(user *domain.User) error {
 func (r *userRepository) GetUserPosts(userID uint, page, limit int) ([]domain.Post, error) {
 	offset := (page - 1) * limit
 	query := `
-        SELECT id, title, content, image_url, link_url, user_id, likes, created_at, updated_at
-        FROM posts
-        WHERE user_id = $1
-        ORDER BY created_at DESC
+        SELECT 
+            p.id, p.title, p.content, 
+            COALESCE(p.image_url, '') as image_url, 
+            COALESCE(p.link_url, '') as link_url, 
+            p.likes, p.created_at, p.updated_at,
+            u.id, u.username, u.email, COALESCE(u.bio, '') as bio,
+            COALESCE(u.avatar_url, '') as avatar_url,
+            COALESCE(u.post_count, 0) as post_count,
+            u.created_at, u.updated_at
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.user_id = $1
+        ORDER BY p.created_at DESC
         LIMIT $2 OFFSET $3`
 
 	rows, err := r.db.Query(query, userID, limit, offset)
@@ -168,24 +177,67 @@ func (r *userRepository) GetUserPosts(userID uint, page, limit int) ([]domain.Po
 
 	var posts []domain.Post
 	for rows.Next() {
-		var post domain.Post
+		post := domain.Post{
+			User: &domain.User{},
+		}
 		err := rows.Scan(
 			&post.ID,
 			&post.Title,
 			&post.Content,
 			&post.ImageURL,
 			&post.LinkURL,
-			&post.UserID,
 			&post.Likes,
 			&post.CreatedAt,
 			&post.UpdatedAt,
+			&post.User.ID,
+			&post.User.Username,
+			&post.User.Email,
+			&post.User.Bio,
+			&post.User.AvatarURL,
+			&post.User.PostCount,
+			&post.User.CreatedAt,
+			&post.User.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
+
+		// Get tags for each post
+		tags, err := r.GetPostTags(post.ID)
+		if err != nil {
+			return nil, err
+		}
+		post.Tags = tags
+
 		posts = append(posts, post)
 	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return posts, nil
+}
+
+// Helper function to get tags for a post
+func (r *userRepository) GetPostTags(postID uint) ([]string, error) {
+	query := `SELECT tag FROM post_tags WHERE post_id = $1`
+	rows, err := r.db.Query(query, postID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tags []string
+	for rows.Next() {
+		var tag string
+		if err := rows.Scan(&tag); err != nil {
+			return nil, err
+		}
+		tags = append(tags, tag)
+	}
+
+	return tags, nil
 }
 
 func (r *userRepository) UpdatePostCount(userID uint) error {
