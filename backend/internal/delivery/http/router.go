@@ -61,7 +61,7 @@ func NewRouter(
 			// User routes
 			protected.GET("/profile", userHandler.GetProfile)
 			protected.PUT("/profile", userHandler.UpdateProfile)
-			protected.GET("/users/:user_id/posts", userHandler.GetUserPosts)
+			protected.GET("/users/:id/posts", userHandler.GetUserPosts)
 
 			// Comment routes
 			comments := protected.Group("/comments")

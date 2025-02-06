@@ -27,7 +27,7 @@ func (r *postRepository) Create(post *domain.Post) error {
 		post.Content,
 		post.ImageURL,
 		post.LinkURL,
-		post.UserID,
+		post.User.ID,
 		post.CreatedAt,
 		post.UpdatedAt,
 	).Scan(&post.ID)
@@ -35,14 +35,20 @@ func (r *postRepository) Create(post *domain.Post) error {
 
 func (r *postRepository) GetByID(id uint) (*domain.Post, error) {
 	query := `
-        SELECT p.id, p.title, p.content, p.image_url, p.link_url, p.user_id, p.likes,
-               p.created_at, p.updated_at, u.username, u.email
+        SELECT 
+            p.id, p.title, p.content, p.image_url, p.link_url, p.likes,
+            p.created_at, p.updated_at,
+            u.id, u.username, u.email, COALESCE(u.bio, '') as bio,
+            COALESCE(u.avatar_url, '') as avatar_url,
+            COALESCE(u.post_count, 0) as post_count,
+            u.created_at, u.updated_at
         FROM posts p
         JOIN users u ON p.user_id = u.id
         WHERE p.id = $1`
 
-	post := &domain.Post{}
-	user := &domain.User{}
+	post := &domain.Post{
+		User: &domain.User{},
+	}
 
 	err := r.db.QueryRow(query, id).Scan(
 		&post.ID,
@@ -50,12 +56,17 @@ func (r *postRepository) GetByID(id uint) (*domain.Post, error) {
 		&post.Content,
 		&post.ImageURL,
 		&post.LinkURL,
-		&post.UserID,
 		&post.Likes,
 		&post.CreatedAt,
 		&post.UpdatedAt,
-		&user.Username,
-		&user.Email,
+		&post.User.ID,
+		&post.User.Username,
+		&post.User.Email,
+		&post.User.Bio,
+		&post.User.AvatarURL,
+		&post.User.PostCount,
+		&post.User.CreatedAt,
+		&post.User.UpdatedAt,
 	)
 
 	if err == sql.ErrNoRows {
@@ -65,16 +76,19 @@ func (r *postRepository) GetByID(id uint) (*domain.Post, error) {
 		return nil, err
 	}
 
-	user.ID = post.UserID
-	post.User = user
 	return post, nil
 }
 
 func (r *postRepository) GetAll(page, limit int) ([]domain.Post, error) {
 	offset := (page - 1) * limit
 	query := `
-        SELECT p.id, p.title, p.content, p.image_url, p.link_url, p.user_id, p.likes,
-               p.created_at, p.updated_at, u.username, u.email
+        SELECT 
+            p.id, p.title, p.content, p.image_url, p.link_url, p.likes,
+            p.created_at, p.updated_at,
+            u.id, u.username, u.email, COALESCE(u.bio, '') as bio,
+            COALESCE(u.avatar_url, '') as avatar_url,
+            COALESCE(u.post_count, 0) as post_count,
+            u.created_at, u.updated_at
         FROM posts p
         JOIN users u ON p.user_id = u.id
         ORDER BY p.created_at DESC
@@ -88,26 +102,30 @@ func (r *postRepository) GetAll(page, limit int) ([]domain.Post, error) {
 
 	var posts []domain.Post
 	for rows.Next() {
-		var post domain.Post
-		var user domain.User
+		post := domain.Post{
+			User: &domain.User{},
+		}
 		err := rows.Scan(
 			&post.ID,
 			&post.Title,
 			&post.Content,
 			&post.ImageURL,
 			&post.LinkURL,
-			&post.UserID,
 			&post.Likes,
 			&post.CreatedAt,
 			&post.UpdatedAt,
-			&user.Username,
-			&user.Email,
+			&post.User.ID,
+			&post.User.Username,
+			&post.User.Email,
+			&post.User.Bio,
+			&post.User.AvatarURL,
+			&post.User.PostCount,
+			&post.User.CreatedAt,
+			&post.User.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
-		user.ID = post.UserID
-		post.User = &user
 		posts = append(posts, post)
 	}
 
@@ -116,10 +134,17 @@ func (r *postRepository) GetAll(page, limit int) ([]domain.Post, error) {
 
 func (r *postRepository) GetByUserID(userID uint) ([]domain.Post, error) {
 	query := `
-        SELECT id, title, content, image_url, link_url, user_id, likes, created_at, updated_at
-        FROM posts
-        WHERE user_id = $1
-        ORDER BY created_at DESC`
+        SELECT 
+            p.id, p.title, p.content, p.image_url, p.link_url, p.likes,
+            p.created_at, p.updated_at,
+            u.id, u.username, u.email, COALESCE(u.bio, '') as bio,
+            COALESCE(u.avatar_url, '') as avatar_url,
+            COALESCE(u.post_count, 0) as post_count,
+            u.created_at, u.updated_at
+        FROM posts p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.user_id = $1
+        ORDER BY p.created_at DESC`
 
 	rows, err := r.db.Query(query, userID)
 	if err != nil {
@@ -129,17 +154,26 @@ func (r *postRepository) GetByUserID(userID uint) ([]domain.Post, error) {
 
 	var posts []domain.Post
 	for rows.Next() {
-		var post domain.Post
+		post := domain.Post{
+			User: &domain.User{},
+		}
 		err := rows.Scan(
 			&post.ID,
 			&post.Title,
 			&post.Content,
 			&post.ImageURL,
 			&post.LinkURL,
-			&post.UserID,
 			&post.Likes,
 			&post.CreatedAt,
 			&post.UpdatedAt,
+			&post.User.ID,
+			&post.User.Username,
+			&post.User.Email,
+			&post.User.Bio,
+			&post.User.AvatarURL,
+			&post.User.PostCount,
+			&post.User.CreatedAt,
+			&post.User.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -164,7 +198,7 @@ func (r *postRepository) Update(post *domain.Post) error {
 		post.LinkURL,
 		post.UpdatedAt,
 		post.ID,
-		post.UserID,
+		post.User.ID,
 	)
 	if err != nil {
 		return err

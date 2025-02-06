@@ -5,25 +5,10 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import Image from "next/image"
 import { MessageCircle, Heart, Share, BookmarkPlus } from "lucide-react"
+import { Post } from "@/types/posts"
 
 interface PostCardProps {
-  post: {
-    id: string
-    title: string
-    content: string
-    author: {
-      name: string
-      image?: string
-      isAnonymous?: boolean
-    }
-    createdAt: string
-    imageUrl?: string
-    linkUrl?: string
-    tags: string[]
-    likes: number
-    comments: number
-    isLiked?: boolean
-  }
+  post: Post
 }
 
 export function PostCard({ post }: PostCardProps) {
@@ -31,20 +16,21 @@ export function PostCard({ post }: PostCardProps) {
     <Card className="bg-gray-800 border-gray-700 hover:border-gray-600 transition-colors">
       <CardHeader className="flex flex-row items-center gap-4">
         <Avatar>
-          {post.author.isAnonymous ? (
+          {/* check if user is anonymous */}
+          {false  ? (
             <AvatarFallback className="bg-yellow-500/10 text-yellow-500">AN</AvatarFallback>
           ) : (
             <>
-              <AvatarImage src={post.author.image} />
-              <AvatarFallback>{post.author.name[0]}</AvatarFallback>
+              <AvatarImage src={post.user.avatarUrl || ''} />
+              <AvatarFallback>{post.user.username[0].toUpperCase()}</AvatarFallback>
             </>
           )}
         </Avatar>
         <div className="flex flex-col">
           <p className="text-sm font-medium text-white">
-            {post.author.isAnonymous ? "Anonymous" : post.author.name}
+            {post.user.username.charAt(0).toUpperCase() + post.user.username.slice(1)}
           </p>
-          <p className="text-xs text-gray-400">{post.createdAt}</p>
+          <p className="text-xs text-gray-400">{post.created_at}</p>
         </div>
       </CardHeader>
       
@@ -57,10 +43,10 @@ export function PostCard({ post }: PostCardProps) {
         
         <p className="text-gray-300">{post.content}</p>
         
-        {post.imageUrl && (
+        {post.image_url && (
           <div className="relative h-80 w-full rounded-lg overflow-hidden">
             <Image
-              src={post.imageUrl}
+              src={post.image_url}
               alt={post.title}
               fill
               className="object-cover"
@@ -68,9 +54,9 @@ export function PostCard({ post }: PostCardProps) {
           </div>
         )}
         
-        {post.linkUrl && (
+        {post.link_url && (
           <a
-            href={post.linkUrl}
+            href={post.link_url}
             target="_blank"
             rel="noopener noreferrer"
             className="block p-4 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
@@ -95,12 +81,13 @@ export function PostCard({ post }: PostCardProps) {
       <CardFooter className="border-t border-gray-700 pt-4">
         <div className="flex items-center gap-4 w-full">
           <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-            <Heart className={`w-4 h-4 mr-1 ${post.isLiked ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+            <Heart className={`w-4 h-4 mr-1 ${post.likes > 0 ? 'fill-yellow-500 text-yellow-500' : ''}`} />
             {post.likes}
           </Button>
           <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
             <MessageCircle className="w-4 h-4 mr-1" />
-            {post.comments}
+            {/* comment */}
+            { 0}
           </Button>
           <div className="ml-auto flex gap-2">
             <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
