@@ -1,26 +1,16 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PostCard } from "@/components/posts/post-card"
 import { CreatePostButton } from "@/components/posts/create-post-button"
+import { Post } from "@/types/posts"
 
-interface Post {
-  id: string
-  title: string
-  content: string
-  author: {
-    name: string
-    image: string
-  }
-  createdAt: string
-  tags: string[]
-  likes: number
-  comments: number
-}
 
 interface FeedTabsProps {
-  posts: Post[]
+  allPosts: Post[] | undefined
+  userPosts: Post[] | undefined
+  isLoading: boolean
 }
 
-export function FeedTabs({ posts }: FeedTabsProps) {
+export function FeedTabs({ allPosts, userPosts, isLoading }: FeedTabsProps) {
   return (
     <Tabs defaultValue="feed" className="w-full">
       <TabsList className="bg-gray-800">
@@ -34,13 +24,17 @@ export function FeedTabs({ posts }: FeedTabsProps) {
       </div>
 
       <TabsContent value="feed" className="space-y-4">
-        {posts.map((post) => (
+        {allPosts?.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
       </TabsContent>
       
       <TabsContent value="my-posts">
-        <p className="text-gray-400">Your posts will appear here</p>
+        <p className="text-gray-400">
+          {userPosts?.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))}
+        </p>
       </TabsContent>
       
       <TabsContent value="saved">
