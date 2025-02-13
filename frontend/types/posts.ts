@@ -7,6 +7,7 @@ export interface Post {
   image_url?: string
   link_url?: string
   likes: number
+  comment_count: number
   user: User
   tags: string[] 
   created_at: string

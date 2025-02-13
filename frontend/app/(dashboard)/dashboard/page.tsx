@@ -8,7 +8,10 @@ import { UpcomingEvents } from "@/components/dashboard/upcoming-events"
 import { usePosts, useUserPosts } from "@/hooks/posts"
 import { useUser } from "@/hooks/auth"
 import  { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { ArrowUp } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 // Mock data - move to a separate file later
 const mockData = {
@@ -31,13 +34,27 @@ const mockData = {
 export default function DashboardPage() {
   const router = useRouter()
   const { user } = useUser()
+  const [showScrollTop, setShowScrollTop] = useState(false)
   
   // Protect the dashboard route
   useEffect(() => {
-    if (!localStorage.getItem('token')) {
-      router.push('/login')
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400)
     }
-  }, [router])
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
+
+  if (!localStorage.getItem('token')) {
+    router.push('/login')
+  }
 
     // Fetch posts with the user's ID
     const { data: posts = [], isLoading } = usePosts()
@@ -75,6 +92,17 @@ export default function DashboardPage() {
             <UpcomingEvents events={mockData.events} />
           </div>
         </div>
+        {/* Scroll to Top Button */}
+        <Button
+          onClick={scrollToTop}
+          className={cn(
+            "fixed bottom-8 right-8 rounded-full p-3 bg-gray-600 hover:border-yellow-600 hover:border-2 border-1 border-yellow-500 shadow-lg transition-all duration-300 z-50 h-14 w-14",
+            showScrollTop ? "translate-y-0 opacity-100" : "translate-y-16 opacity-0"
+          )}
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="h-10 w-10 text-yellow-500" />
+        </Button>
       </div>
     </div>
   )
