@@ -41,7 +41,8 @@ func (r *postRepository) GetByID(id uint) (*domain.Post, error) {
             u.id, u.username, u.email, COALESCE(u.bio, '') as bio,
             COALESCE(u.avatar_url, '') as avatar_url,
             COALESCE(u.post_count, 0) as post_count,
-            u.created_at, u.updated_at
+            u.created_at, u.updated_at,
+			(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
         FROM posts p
         JOIN users u ON p.user_id = u.id
         WHERE p.id = $1`
@@ -67,6 +68,7 @@ func (r *postRepository) GetByID(id uint) (*domain.Post, error) {
 		&post.User.PostCount,
 		&post.User.CreatedAt,
 		&post.User.UpdatedAt,
+		&post.CommentCount,
 	)
 
 	if err == sql.ErrNoRows {
@@ -88,7 +90,8 @@ func (r *postRepository) GetAll(page, limit int) ([]domain.Post, error) {
             u.id, u.username, u.email, COALESCE(u.bio, '') as bio,
             COALESCE(u.avatar_url, '') as avatar_url,
             COALESCE(u.post_count, 0) as post_count,
-            u.created_at, u.updated_at
+            u.created_at, u.updated_at,
+			(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
         FROM posts p
         JOIN users u ON p.user_id = u.id
         ORDER BY p.created_at DESC
@@ -122,6 +125,7 @@ func (r *postRepository) GetAll(page, limit int) ([]domain.Post, error) {
 			&post.User.PostCount,
 			&post.User.CreatedAt,
 			&post.User.UpdatedAt,
+			&post.CommentCount,
 		)
 		if err != nil {
 			return nil, err
@@ -141,6 +145,8 @@ func (r *postRepository) GetByUserID(userID uint) ([]domain.Post, error) {
             COALESCE(u.avatar_url, '') as avatar_url,
             COALESCE(u.post_count, 0) as post_count,
             u.created_at, u.updated_at
+			(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
+
         FROM posts p
         JOIN users u ON p.user_id = u.id
         WHERE p.user_id = $1
@@ -174,6 +180,7 @@ func (r *postRepository) GetByUserID(userID uint) ([]domain.Post, error) {
 			&post.User.PostCount,
 			&post.User.CreatedAt,
 			&post.User.UpdatedAt,
+			&post.CommentCount,
 		)
 		if err != nil {
 			return nil, err
@@ -314,6 +321,13 @@ func (r *postRepository) RemoveLike(postID, userID uint) error {
 func (r *postRepository) GetLikes(postID uint) (int, error) {
 	var count int
 	query := `SELECT COUNT(*) FROM post_likes WHERE post_id = $1`
+	err := r.db.QueryRow(query, postID).Scan(&count)
+	return count, err
+}
+
+func (r *postRepository) GetCommentCount(postID uint) (int, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM comments WHERE post_id = $1`
 	err := r.db.QueryRow(query, postID).Scan(&count)
 	return count, err
 }

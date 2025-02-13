@@ -149,3 +149,21 @@ func (u *commentUsecase) Delete(userID, commentID uint) error {
 
 	return u.commentRepo.Delete(commentID)
 }
+
+func (u *commentUsecase) Like(userID, commentID uint) error {
+	// Verify comment exists
+	_, err := u.commentRepo.GetByID(commentID)
+	if err != nil {
+		return err
+	}
+	return u.commentRepo.AddLike(commentID, userID)
+}
+
+func (u *commentUsecase) Unlike(userID, commentID uint) error {
+	// Verify comment exists
+	_, err := u.commentRepo.GetByID(commentID)
+	if err != nil {
+		return err
+	}
+	return u.commentRepo.RemoveLike(commentID, userID)
+}

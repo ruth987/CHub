@@ -66,7 +66,7 @@ export function PostCard({ post }: PostCardProps) {
         )}
         
         <div className="flex flex-wrap gap-2">
-          {post.tags.map((tag) => (
+          {post?.tags?.map((tag) => (
             <Badge
               key={tag}
               variant="secondary"
@@ -86,8 +86,7 @@ export function PostCard({ post }: PostCardProps) {
           </Button>
           <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
             <MessageCircle className="w-4 h-4 mr-1" />
-            {/* comment */}
-            { 0}
+            {post.comment_count}
           </Button>
           <div className="ml-auto flex gap-2">
             <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">

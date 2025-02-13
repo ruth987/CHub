@@ -34,14 +34,26 @@ func (r *commentRepository) Create(comment *domain.Comment) error {
 
 func (r *commentRepository) GetByID(id uint) (*domain.Comment, error) {
 	query := `
-        SELECT c.id, c.content, c.user_id, c.post_id, c.parent_id, c.created_at, c.updated_at,
-               u.username, u.email
+        SELECT 
+            c.id, c.content, c.user_id, c.post_id, c.parent_id, 
+            c.created_at, c.updated_at,
+            u.id as user_id,
+            u.username, 
+            u.email, 
+            COALESCE(u.bio, '') as bio,
+            COALESCE(u.avatar_url, '') as avatar_url,
+            COALESCE(u.post_count, 0) as post_count,
+            u.created_at as user_created_at,
+            u.updated_at as user_updated_at,
+            (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as likes,
+            COALESCE((SELECT COUNT(*) FROM comments WHERE parent_id = c.id), 0) as reply_count
         FROM comments c
         JOIN users u ON c.user_id = u.id
         WHERE c.id = $1`
 
-	comment := &domain.Comment{}
-	user := &domain.User{}
+	comment := &domain.Comment{
+		User: &domain.User{},
+	}
 
 	err := r.db.QueryRow(query, id).Scan(
 		&comment.ID,
@@ -51,26 +63,44 @@ func (r *commentRepository) GetByID(id uint) (*domain.Comment, error) {
 		&comment.ParentID,
 		&comment.CreatedAt,
 		&comment.UpdatedAt,
-		&user.Username,
-		&user.Email,
+		&comment.User.ID,
+		&comment.User.Username,
+		&comment.User.Email,
+		&comment.User.Bio,
+		&comment.User.AvatarURL,
+		&comment.User.PostCount,
+		&comment.User.CreatedAt,
+		&comment.User.UpdatedAt,
+		&comment.Likes,
+		&comment.ReplyCount,
 	)
+
+	if err == sql.ErrNoRows {
+		return nil, errors.New("comment not found")
+	}
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("comment not found")
-		}
 		return nil, err
 	}
 
-	user.ID = comment.UserID
-	comment.User = user
 	return comment, nil
 }
 
 func (r *commentRepository) GetByPostID(postID uint, page, limit int) ([]domain.Comment, error) {
 	offset := (page - 1) * limit
 	query := `
-        SELECT c.id, c.content, c.user_id, c.post_id, c.parent_id, c.created_at, c.updated_at,
-               u.username, u.email
+       SELECT 
+            c.id, c.content, c.user_id, c.post_id, c.parent_id, 
+            c.created_at, c.updated_at,
+            u.id as user_id,
+            u.username, 
+            u.email, 
+            COALESCE(u.bio, '') as bio,
+            COALESCE(u.avatar_url, '') as avatar_url,
+            COALESCE(u.post_count, 0) as post_count,
+            u.created_at as user_created_at,
+            u.updated_at as user_updated_at,
+            (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id) as likes,
+            COALESCE((SELECT COUNT(*) FROM comments WHERE parent_id = c.id), 0) as reply_count
         FROM comments c
         JOIN users u ON c.user_id = u.id
         WHERE c.post_id = $1
@@ -86,7 +116,7 @@ func (r *commentRepository) GetByPostID(postID uint, page, limit int) ([]domain.
 	var comments []domain.Comment
 	for rows.Next() {
 		var comment domain.Comment
-		var user domain.User
+		comment.User = &domain.User{}
 		err := rows.Scan(
 			&comment.ID,
 			&comment.Content,
@@ -95,14 +125,20 @@ func (r *commentRepository) GetByPostID(postID uint, page, limit int) ([]domain.
 			&comment.ParentID,
 			&comment.CreatedAt,
 			&comment.UpdatedAt,
-			&user.Username,
-			&user.Email,
+			&comment.User.ID,
+			&comment.User.Username,
+			&comment.User.Email,
+			&comment.User.Bio,
+			&comment.User.AvatarURL,
+			&comment.User.PostCount,
+			&comment.User.CreatedAt,
+			&comment.User.UpdatedAt,
+			&comment.Likes,
+			&comment.ReplyCount,
 		)
 		if err != nil {
 			return nil, err
 		}
-		user.ID = comment.UserID
-		comment.User = &user
 		comments = append(comments, comment)
 	}
 
@@ -188,4 +224,48 @@ func (r *commentRepository) Delete(id uint) error {
 	}
 
 	return nil
+}
+func (r *commentRepository) AddLike(commentID, userID uint) error {
+	query := `
+        INSERT INTO comment_likes (comment_id, user_id, created_at)
+        VALUES ($1, $2, NOW())
+        ON CONFLICT (comment_id, user_id) DO NOTHING`
+
+	_, err := r.db.Exec(query, commentID, userID)
+	if err != nil {
+		return err
+	}
+
+	// Update likes count
+	updateQuery := `
+        UPDATE comments 
+        SET likes = (SELECT COUNT(*) FROM comment_likes WHERE comment_id = $1)
+        WHERE id = $1`
+
+	_, err = r.db.Exec(updateQuery, commentID)
+	return err
+}
+
+func (r *commentRepository) RemoveLike(commentID, userID uint) error {
+	query := `DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2`
+	_, err := r.db.Exec(query, commentID, userID)
+	if err != nil {
+		return err
+	}
+
+	// Update likes count
+	updateQuery := `
+        UPDATE comments 
+        SET likes = (SELECT COUNT(*) FROM comment_likes WHERE comment_id = $1)
+        WHERE id = $1`
+
+	_, err = r.db.Exec(updateQuery, commentID)
+	return err
+}
+
+func (r *commentRepository) GetLikes(commentID uint) (int, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM comment_likes WHERE comment_id = $1`
+	err := r.db.QueryRow(query, commentID).Scan(&count)
+	return count, err
 }

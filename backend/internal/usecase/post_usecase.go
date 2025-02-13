@@ -69,7 +69,7 @@ func (u *postUsecase) GetByID(id uint) (*domain.Post, error) {
 	post.Likes = likes
 
 	// Get comments
-	comments, err := u.commentRepo.GetByPostID(id, 1, 100) // First 100 comments
+	comments, err := u.commentRepo.GetByPostID(id, 1, 100) 
 	if err != nil {
 		return nil, err
 	}

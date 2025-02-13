@@ -37,15 +37,12 @@ export function CommentCard({ comment, postId, isReply = false }: CommentCardPro
 
   const handleLike = async () => {
     try {
-      // Replace with your API call
       const response = await fetch(`/api/comments/${comment.id}/like`, {
         method: "POST",
       })
       if (!response.ok) throw new Error("Failed to like comment")
-      // Handle success (update UI, etc.)
     } catch (error) {
       console.error(error)
-      // Handle error
     }
   }
 
@@ -54,12 +51,12 @@ export function CommentCard({ comment, postId, isReply = false }: CommentCardPro
       <CardContent className="pt-4">
         <div className="flex items-start gap-4">
           <Avatar className="w-8 h-8">
-            {comment.author.isAnonymous ? (
+            {false ? (
               <AvatarFallback className="bg-yellow-500/10 text-yellow-500">AN</AvatarFallback>
             ) : (
               <>
-                <AvatarImage src={comment.author.image} />
-                <AvatarFallback>{comment.author.name[0]}</AvatarFallback>
+                <AvatarImage src={comment.author?.image} />
+                <AvatarFallback>{comment.author?.name[0]}</AvatarFallback>
               </>
             )}
           </Avatar>
@@ -68,7 +65,7 @@ export function CommentCard({ comment, postId, isReply = false }: CommentCardPro
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-white">
-                  {comment.author.isAnonymous ? "Anonymous" : comment.author.name}
+                  {false ? "Anonymous" : comment.author?.name}
                 </p>
                 <p className="text-xs text-gray-400">{comment.createdAt}</p>
               </div>

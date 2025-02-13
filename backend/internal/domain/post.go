@@ -3,17 +3,18 @@ package domain
 import "time"
 
 type Post struct {
-	ID        uint      `json:"id"`
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	ImageURL  string    `json:"image_url,omitempty"`
-	LinkURL   string    `json:"link_url,omitempty"`
-	Likes     int       `json:"likes"`
-	User      *User     `json:"user,omitempty"`
-	Tags      []string  `json:"tags,omitempty"`
-	Comments  []Comment `json:"comments,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID           uint      `json:"id"`
+	Title        string    `json:"title"`
+	Content      string    `json:"content"`
+	ImageURL     string    `json:"image_url,omitempty"`
+	LinkURL      string    `json:"link_url,omitempty"`
+	Likes        int       `json:"likes"`
+	CommentCount int       `json:"comment_count"`
+	User         *User     `json:"user,omitempty"`
+	Tags         []string  `json:"tags,omitempty"`
+	Comments     []Comment `json:"comments,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type CreatePostRequest struct {
@@ -44,6 +45,7 @@ type PostRepository interface {
 	AddLike(postID, userID uint) error
 	RemoveLike(postID, userID uint) error
 	GetLikes(postID uint) (int, error)
+	GetCommentCount(postID uint) (int, error)
 }
 
 type PostUsecase interface {
