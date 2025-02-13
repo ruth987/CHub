@@ -180,7 +180,7 @@ export function PostDetail({ postId }: PostDetailProps) {
         </CardFooter>
       </Card>
 
-      {/* Comments Section */}
+      Comments Section
       {showComments && (
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-white mb-6">

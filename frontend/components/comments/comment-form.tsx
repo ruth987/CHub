@@ -12,49 +12,44 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useCreateComment } from "@/hooks/comments"
 
 const formSchema = z.object({
   content: z.string().min(1, "Comment cannot be empty"),
-  isAnonymous: z.boolean().default(false),
 })
 
 interface CommentFormProps {
-  postId: string
-  parentId?: string
+  postId: number
+  parentId?: number
   onSuccess?: () => void
 }
 
 export function CommentForm({ postId, parentId, onSuccess }: CommentFormProps) {
+  const { mutate: createComment, isPending } = useCreateComment()
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       content: "",
-      isAnonymous: false,
     },
   })
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      // Replace with your API call
-      const response = await fetch(`/api/posts/${postId}/comments`, {
-        method: "POST",
-        body: JSON.stringify(values),
-      })
-      
-      if (!response.ok) throw new Error("Failed to post comment")
-      
-      form.reset()
-      // Handle success (show toast, update comments list, etc.)
-    } catch (error) {
-      console.error(error)
-      // Handle error
-    }
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    createComment({
+      content: values.content,
+      postId,
+      parentId
+    }, {
+      onSuccess: () => {
+        form.reset()
+        onSuccess?.()
+      }
+    })
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mb-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="content"
@@ -64,7 +59,8 @@ export function CommentForm({ postId, parentId, onSuccess }: CommentFormProps) {
                 <Textarea 
                   placeholder="Share your thoughts..." 
                   {...field}
-                  className="bg-gray-700 border-gray-600 text-white min-h-[100px]"
+                  className="bg-gray-700 border-gray-700 text-white min-h-[100px]"
+                  disabled={isPending}
                 />
               </FormControl>
               <FormMessage />
@@ -72,28 +68,13 @@ export function CommentForm({ postId, parentId, onSuccess }: CommentFormProps) {
           )}
         />
 
-        <div className="flex items-center justify-between">
-          <FormField
-            control={form.control}
-            name="isAnonymous"
-            render={({ field }) => (
-              <FormItem className="flex items-center space-x-2">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    className="border-gray-600 data-[state=checked]:bg-yellow-500"
-                  />
-                </FormControl>
-                <label className="text-sm text-white">
-                  Post anonymously
-                </label>
-              </FormItem>
-            )}
-          />
-
-          <Button type="submit" className="bg-yellow-500 text-gray-900 hover:bg-yellow-400">
-            Post Comment
+        <div className="flex justify-end">
+          <Button 
+            type="submit" 
+            className="bg-yellow-500 text-gray-900 hover:bg-yellow-400"
+            disabled={isPending}
+          >
+            {isPending ? "Posting..." : "Post Comment"}
           </Button>
         </div>
       </form>

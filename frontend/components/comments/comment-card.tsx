@@ -12,77 +12,92 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CommentForm } from "@/components/comments/comment-form"
+import { useDeleteComment, useLikeComment, useUnlikeComment } from "@/hooks/comments"
+import { Comment } from "@/types/comment"
+import { formatDistanceToNow } from 'date-fns'
+import { useUser } from "@/hooks/auth"
 
 interface CommentCardProps {
-  comment: {
-    id: string
-    content: string
-    author: {
-      name: string
-      image?: string
-      isAnonymous?: boolean
-    }
-    createdAt: string
-    likes: number
-    isLiked?: boolean
-    replies?: any[]
-  }
-  postId: string
+  comment: Comment
+  postId: number
   isReply?: boolean
 }
 
 export function CommentCard({ comment, postId, isReply = false }: CommentCardProps) {
   const [isReplying, setIsReplying] = useState(false)
   const [showReplies, setShowReplies] = useState(false)
+  const { mutate: deleteComment } = useDeleteComment()
+  const { mutate: likeComment } = useLikeComment()
+  const { mutate: unlikeComment } = useUnlikeComment()
+  const { user } = useUser()
 
-  const handleLike = async () => {
-    try {
-      const response = await fetch(`/api/comments/${comment.id}/like`, {
-        method: "POST",
-      })
-      if (!response.ok) throw new Error("Failed to like comment")
-    } catch (error) {
-      console.error(error)
+  const handleLike = () => {
+    if (!user) return // Add authentication check
+    if (comment.is_liked) {
+      unlikeComment(comment.id)
+    } else {
+      likeComment(comment.id)
     }
   }
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this comment?')) {
+      deleteComment(comment.id)
+    }
+  }
+
+  const formattedDate = formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })
 
   return (
     <Card className={`bg-gray-800 border-gray-700 ${isReply ? 'ml-8' : ''}`}>
       <CardContent className="pt-4">
         <div className="flex items-start gap-4">
           <Avatar className="w-8 h-8">
-            {false ? (
-              <AvatarFallback className="bg-yellow-500/10 text-yellow-500">AN</AvatarFallback>
-            ) : (
-              <>
-                <AvatarImage src={comment.author?.image} />
-                <AvatarFallback>{comment.author?.name[0]}</AvatarFallback>
-              </>
-            )}
+            <AvatarImage src={comment.user.avatarUrl || ''} alt={comment.user.username} />
+            <AvatarFallback className="bg-yellow-500 text-gray-900">
+              {comment.user.username[0].toUpperCase()}
+            </AvatarFallback>
           </Avatar>
-          
+
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-white">
-                  {false ? "Anonymous" : comment.author?.name}
+                  {comment.user.username}
                 </p>
-                <p className="text-xs text-gray-400">{comment.createdAt}</p>
+                <p className="text-xs text-gray-400">{formattedDate}</p>
               </div>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-gray-800 border-gray-700">
-                  <DropdownMenuItem className="text-white hover:bg-gray-700">
-                    Report Comment
-                  </DropdownMenuItem>
-                  {/* Add more menu items as needed */}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {user && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-gray-800 border-gray-700">
+                    {user.id === comment.user_id && (
+                      <>
+                        <DropdownMenuItem 
+                          onClick={() => {/* Add edit handler */}}
+                          className="text-white hover:bg-gray-700 cursor-pointer"
+                        >
+                          Edit Comment
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={handleDelete}
+                          className="text-white hover:bg-gray-700 cursor-pointer"
+                        >
+                          Delete Comment
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuItem className="text-white hover:bg-gray-700 cursor-pointer">
+                      Report Comment
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
 
             <p className="mt-2 text-gray-300">{comment.content}</p>
@@ -92,14 +107,14 @@ export function CommentCard({ comment, postId, isReply = false }: CommentCardPro
 
       <CardFooter className="pt-2 pb-4">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleLike}
             className="text-gray-400 hover:text-white"
           >
-            <Heart 
-              className={`w-4 h-4 mr-1 ${comment.isLiked ? 'fill-yellow-500 text-yellow-500' : ''}`} 
+            <Heart
+              className={`w-4 h-4 mr-1 ${comment.is_liked ? 'fill-yellow-500 text-yellow-500' : ''}`}
             />
             {comment.likes}
           </Button>
@@ -116,14 +131,14 @@ export function CommentCard({ comment, postId, isReply = false }: CommentCardPro
             </Button>
           )}
 
-          {comment.replies && comment.replies.length > 0 && (
+          {comment.reply_count > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowReplies(!showReplies)}
               className="text-gray-400 hover:text-white"
             >
-              {showReplies ? 'Hide' : 'Show'} Replies ({comment.replies.length})
+              {showReplies ? 'Hide' : 'Show'} Replies ({comment.reply_count})
             </Button>
           )}
         </div>
@@ -131,8 +146,8 @@ export function CommentCard({ comment, postId, isReply = false }: CommentCardPro
 
       {isReplying && (
         <div className="px-4 pb-4">
-          <CommentForm 
-            postId={postId} 
+          <CommentForm
+            postId={postId}
             parentId={comment.id}
             onSuccess={() => setIsReplying(false)}
           />
