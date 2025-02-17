@@ -43,22 +43,26 @@ func main() {
 	userRepo := postgres.NewUserRepository(db)
 	postRepo := postgres.NewPostRepository(db)
 	commentRepo := postgres.NewCommentRepository(db)
+	savedPostRepo := postgres.NewSavedPostRepository(db)
 
 	// Initialize usecases
 	userUsecase := usecase.NewUserUsecase(userRepo, jwtService)
 	postUsecase := usecase.NewPostUsecase(postRepo, commentRepo)
 	commentUsecase := usecase.NewCommentUsecase(commentRepo, postRepo)
+	savedPostUsecase := usecase.NewSavedPostUsecase(savedPostRepo, postRepo)
 
 	// Initialize handlers
 	userHandler := handler.NewUserHandler(userUsecase)
 	postHandler := handler.NewPostHandler(postUsecase)
 	commentHandler := handler.NewCommentHandler(commentUsecase)
+	savedPostHandler := handler.NewSavedPostHandler(savedPostUsecase)
 
 	// Setup router
 	router := httpDelivery.NewRouter(
 		userHandler,
 		postHandler,
 		commentHandler,
+		savedPostHandler,
 		authMiddleware(jwtService),
 	)
 

@@ -14,6 +14,8 @@ type Comment struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 	Likes      int       `json:"likes"`
 	ReplyCount int       `json:"reply_count"`
+	IsLiked    bool      `json:"is_liked"`
+	IsReported bool      `json:"is_reported"`
 }
 
 type CreateCommentRequest struct {
@@ -35,6 +37,11 @@ type CommentRepository interface {
 	AddLike(commentID, userID uint) error
 	RemoveLike(commentID, userID uint) error
 	GetLikes(commentID uint) (int, error)
+	GetReplyCount(commentID uint) (int, error)
+	IsLikedByUser(commentID, userID uint) (bool, error)
+	AddReport(commentID, userID uint) error
+	RemoveReport(commentID, userID uint) error
+	IsReportedByUser(commentID, userID uint) (bool, error)
 }
 
 type CommentUsecase interface {
@@ -45,4 +52,7 @@ type CommentUsecase interface {
 	Delete(userID, commentID uint) error
 	Like(userID, commentID uint) error
 	Unlike(userID, commentID uint) error
+	GetReplies(commentID uint) ([]Comment, error)
+	Report(userID, commentID uint) error
+	Unreport(userID, commentID uint) error
 }

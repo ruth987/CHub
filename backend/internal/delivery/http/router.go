@@ -11,7 +11,9 @@ func NewRouter(
 	userHandler *handler.UserHandler,
 	postHandler *handler.PostHandler,
 	commentHandler *handler.CommentHandler,
+	savedPostHandler *handler.SavedPostHandler,
 	authMiddleware gin.HandlerFunc,
+
 ) *gin.Engine {
 	router := gin.Default()
 
@@ -70,7 +72,17 @@ func NewRouter(
 				comments.DELETE("/:id", commentHandler.Delete)
 			}
 		}
-	}
 
+		// Saved post routes
+		savedPosts := protected.Group("/saved-posts")
+		savedPosts.Use(authMiddleware)
+		{
+			savedPosts.POST("/:id", savedPostHandler.SavePost)
+			savedPosts.DELETE("/:id", savedPostHandler.UnsavePost)
+			savedPosts.GET("", savedPostHandler.GetSavedPosts)
+			savedPosts.GET("/:id/check", savedPostHandler.IsSaved)
+		}
+	}
 	return router
 }
+

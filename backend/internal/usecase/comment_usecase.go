@@ -20,7 +20,7 @@ func NewCommentUsecase(cr domain.CommentRepository, pr domain.PostRepository) do
 }
 
 func (u *commentUsecase) Create(userID, postID uint, req *domain.CreateCommentRequest) (*domain.Comment, error) {
-	// Verify post exists
+	// Verify p  ost exists
 	_, err := u.postRepo.GetByID(postID)
 	if err != nil {
 		return nil, errors.New("post not found")
@@ -166,4 +166,40 @@ func (u *commentUsecase) Unlike(userID, commentID uint) error {
 		return err
 	}
 	return u.commentRepo.RemoveLike(commentID, userID)
+}
+
+func (u *commentUsecase) GetReplies(commentID uint) ([]domain.Comment, error) {
+	// First verify the comment exists
+	_, err := u.commentRepo.GetByID(commentID)
+	if err != nil {
+		return nil, err
+	}
+
+	return u.commentRepo.GetReplies(commentID)
+}
+
+func (u *commentUsecase) Report(userID, commentID uint) error {
+	_, err := u.commentRepo.GetByID(commentID)
+	if err != nil {
+		return err
+	}
+
+	isReported, err := u.commentRepo.IsReportedByUser(commentID, userID)
+	if err != nil {
+		return err
+	}
+	if isReported {
+		return nil
+	}
+
+	return u.commentRepo.AddReport(commentID, userID)
+}
+
+func (u *commentUsecase) Unreport(userID, commentID uint) error {
+	_, err := u.commentRepo.GetByID(commentID)
+	if err != nil {
+		return err
+	}
+
+	return u.commentRepo.RemoveReport(commentID, userID)
 }
