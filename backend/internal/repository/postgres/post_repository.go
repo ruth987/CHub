@@ -11,6 +11,132 @@ type postRepository struct {
 	db *sql.DB
 }
 
+func (r *postRepository) AddReport(postID, userID uint) error {
+	query := `
+        INSERT INTO post_reports (post_id, user_id, created_at)
+        VALUES ($1, $2, NOW())
+        ON CONFLICT (post_id, user_id) DO NOTHING
+    `
+	_, err := r.db.Exec(query, postID, userID)
+	return err
+}
+
+// AddSave implements domain.PostRepository.
+func (r *postRepository) AddSave(postID, userID uint) error {
+	query := `
+        INSERT INTO saved_posts (post_id, user_id, created_at)
+        VALUES ($1, $2, NOW())
+        ON CONFLICT (post_id, user_id) DO NOTHING
+    `
+	_, err := r.db.Exec(query, postID, userID)
+	return err
+}
+
+// GetSavedPosts implements domain.PostRepository.
+func (r *postRepository) GetSavedPosts(userID uint) ([]domain.Post, error) {
+	query := `
+        SELECT 
+            p.id, p.title, p.content, p.image_url, p.link_url,
+            p.likes, p.created_at, p.updated_at,
+            u.id, u.username, u.email, COALESCE(u.bio, '') as bio,
+            COALESCE(u.avatar_url, '') as avatar_url,
+            COALESCE(u.post_count, 0) as post_count,
+            u.created_at, u.updated_at,
+            (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
+        FROM posts p
+        JOIN saved_posts sp ON sp.post_id = p.id
+        JOIN users u ON p.user_id = u.id
+        WHERE sp.user_id = $1
+        ORDER BY sp.created_at DESC
+    `
+	// Use the same scanning logic as GetAll method
+	rows, err := r.db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []domain.Post
+	for rows.Next() {
+		post := domain.Post{
+			User: &domain.User{},
+		}
+		// Scan the same fields as in GetAll
+		err := rows.Scan(
+			&post.ID,
+			&post.Title,
+			&post.Content,
+			&post.ImageURL,
+			&post.LinkURL,
+			&post.Likes,
+			&post.CreatedAt,
+			&post.UpdatedAt,
+			&post.User.ID,
+			&post.User.Username,
+			&post.User.Email,
+			&post.User.Bio,
+			&post.User.AvatarURL,
+			&post.User.PostCount,
+			&post.User.CreatedAt,
+			&post.User.UpdatedAt,
+			&post.CommentCount,
+		)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func (r *postRepository) IsLikedByUser(postID, userID uint) (bool, error) {
+	query := `
+        SELECT EXISTS(
+            SELECT 1 FROM post_likes
+            WHERE post_id = $1 AND user_id = $2
+        )
+    `
+	var exists bool
+	err := r.db.QueryRow(query, postID, userID).Scan(&exists)
+	return exists, err
+}
+
+func (r *postRepository) IsReportedByUser(postID, userID uint) (bool, error) {
+	query := `
+        SELECT EXISTS(
+            SELECT 1 FROM post_reports
+            WHERE post_id = $1 AND user_id = $2
+        )
+    `
+	var exists bool
+	err := r.db.QueryRow(query, postID, userID).Scan(&exists)
+	return exists, err
+}
+
+func (r *postRepository) IsSavedByUser(postID, userID uint) (bool, error) {
+	query := `
+        SELECT EXISTS(
+            SELECT 1 FROM saved_posts
+            WHERE post_id = $1 AND user_id = $2
+        )
+    `
+	var exists bool
+	err := r.db.QueryRow(query, postID, userID).Scan(&exists)
+	return exists, err
+}
+
+func (r *postRepository) RemoveReport(postID, userID uint) error {
+	query := `DELETE FROM post_reports WHERE post_id = $1 AND user_id = $2`
+	_, err := r.db.Exec(query, postID, userID)
+	return err
+}
+
+func (r *postRepository) RemoveSave(postID, userID uint) error {
+	query := `DELETE FROM saved_posts WHERE post_id = $1 AND user_id = $2`
+	_, err := r.db.Exec(query, postID, userID)
+	return err
+}
+
 func NewPostRepository(db *sql.DB) domain.PostRepository {
 	return &postRepository{db: db}
 }

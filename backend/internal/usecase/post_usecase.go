@@ -172,3 +172,23 @@ func (u *postUsecase) Like(userID uint, postID uint) error {
 func (u *postUsecase) Unlike(userID uint, postID uint) error {
 	return u.postRepo.RemoveLike(postID, userID)
 }
+
+func (u *postUsecase) SavePost(userID, postID uint) error {
+    return u.postRepo.AddSave(postID, userID)
+}
+
+func (u *postUsecase) UnsavePost(userID, postID uint) error {
+    return u.postRepo.RemoveSave(postID, userID)
+}
+
+func (u *postUsecase) GetSavedPosts(userID uint) ([]domain.Post, error) {
+    return u.postRepo.GetSavedPosts(userID)
+}
+
+func (u *postUsecase) Report(userID, postID uint) error {
+    return u.postRepo.AddReport(postID, userID)
+}
+
+func (u *postUsecase) Unreport(userID, postID uint) error {
+    return u.postRepo.RemoveReport(postID, userID)
+}

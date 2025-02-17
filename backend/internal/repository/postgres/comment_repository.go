@@ -11,6 +11,54 @@ type commentRepository struct {
 	db *sql.DB
 }
 
+func (r *commentRepository) AddReport(commentID, userID uint) error {
+    query := `
+        INSERT INTO comment_reports (comment_id, user_id, created_at)
+        VALUES ($1, $2, NOW())
+        ON CONFLICT (comment_id, user_id) DO NOTHING
+    `
+    _, err := r.db.Exec(query, commentID, userID)
+    return err
+}
+
+
+func (r *commentRepository) GetReplyCount(commentID uint) (int, error) {
+    var count int
+    query := `SELECT COUNT(*) FROM comments WHERE parent_id = $1`
+    err := r.db.QueryRow(query, commentID).Scan(&count)
+    return count, err
+}
+
+func (r *commentRepository) IsLikedByUser(commentID, userID uint) (bool, error) {
+    query := `
+        SELECT EXISTS(
+            SELECT 1 FROM comment_likes
+            WHERE comment_id = $1 AND user_id = $2
+        )
+    `
+    var exists bool
+    err := r.db.QueryRow(query, commentID, userID).Scan(&exists)
+    return exists, err
+}
+
+func (r *commentRepository) RemoveReport(commentID, userID uint) error {
+    query := `DELETE FROM comment_reports WHERE comment_id = $1 AND user_id = $2`
+    _, err := r.db.Exec(query, commentID, userID)
+    return err
+}
+
+func (r *commentRepository) IsReportedByUser(commentID, userID uint) (bool, error) {
+    query := `
+        SELECT EXISTS(
+            SELECT 1 FROM comment_reports
+            WHERE comment_id = $1 AND user_id = $2
+        )
+    `
+    var exists bool
+    err := r.db.QueryRow(query, commentID, userID).Scan(&exists)
+    return exists, err
+}
+
 func NewCommentRepository(db *sql.DB) domain.CommentRepository {
 	return &commentRepository{db: db}
 }
