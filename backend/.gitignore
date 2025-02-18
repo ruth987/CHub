@@ -4,6 +4,7 @@ backend/tmp/
 backend/logs/
 backend/.env
 backend/config/local.yaml
+backend/tmp/
 
 # Database
 *.sql
