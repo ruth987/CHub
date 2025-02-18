@@ -7,8 +7,11 @@ export function usePosts() {
   return useQuery<Post[]>({
     queryKey: ['posts'],
     queryFn: async () => {
-      const response = await api.get(`/posts`)
-      console.log(response.data)
+      const response = await api.get(`/posts`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      })
       return response.data
     },
   })
@@ -23,7 +26,6 @@ export function usePost(postId: string) {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         })
-        console.log(response.data)
         return response.data
       },
     })
