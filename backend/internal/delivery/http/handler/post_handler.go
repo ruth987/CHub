@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -21,6 +22,7 @@ func NewPostHandler(pu domain.PostUsecase) *PostHandler {
 // Create handles post creation
 func (h *PostHandler) Create(c *gin.Context) {
 	userID, exists := c.Get("user_id")
+	fmt.Println(" in create post handler userID", userID)
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -43,16 +45,52 @@ func (h *PostHandler) Create(c *gin.Context) {
 
 // GetByID handles getting a single post
 func (h *PostHandler) GetByID(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	// Get user ID from context (if authenticated)
+	userID, exists := c.Get("user_id")
+	var uid uint
+	if exists {
+		uid = userID.(uint)
+	}
+
+	// Parse post ID
+	postID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
 
-	post, err := h.postUsecase.GetByID(uint(id))
+	// Get post
+	post, err := h.postUsecase.GetByID(uint(postID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// If user is authenticated, check interaction statuses
+	if exists {
+		// Check if post is liked by user
+		isLiked, err := h.postUsecase.IsLikedByUser(uid, post.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		post.IsLiked = isLiked
+
+		// Check if post is saved by user
+		isSaved, err := h.postUsecase.IsSavedByUser(uid, post.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		post.IsSaved = isSaved
+
+		// Check if post is reported by user
+		isReported, err := h.postUsecase.IsReportedByUser(uid, post.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		post.IsReported = isReported
 	}
 
 	c.JSON(http.StatusOK, post)
@@ -63,7 +101,16 @@ func (h *PostHandler) GetAll(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
-	posts, err := h.postUsecase.GetAll(page, limit)
+	var uid uint
+	if userID, exists := c.Get("user_id"); exists {
+		if id, ok := userID.(uint); ok {
+			uid = id
+		}
+	}
+
+	fmt.Println(" in post handler uid", uid)
+
+	posts, err := h.postUsecase.GetAll(page, limit, uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -142,7 +189,21 @@ func (h *PostHandler) Like(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "post liked successfully"})
+	// Get updated post to return current like count and status
+	post, err := h.postUsecase.GetByID(uint(postID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Set is_liked to true since we just liked it
+	post.IsLiked = true
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "post liked successfully",
+		"likes":    post.Likes,
+		"is_liked": true,
+	})
 }
 
 // Unlike handles post unliking
@@ -164,5 +225,19 @@ func (h *PostHandler) Unlike(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "post unliked successfully"})
+	// Get updated post to return current like count
+	post, err := h.postUsecase.GetByID(uint(postID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Set is_liked to false since we just unliked it
+	post.IsLiked = false
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "post unliked successfully",
+		"likes":    post.Likes,
+		"is_liked": false,
+	})
 }

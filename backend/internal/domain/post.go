@@ -39,7 +39,7 @@ type UpdatePostRequest struct {
 type PostRepository interface {
 	Create(post *Post) error
 	GetByID(id uint) (*Post, error)
-	GetAll(page, limit int) ([]Post, error)
+	GetAll(page, limit int, userID uint) ([]Post, error)
 	GetByUserID(userID uint) ([]Post, error)
 	Update(post *Post) error
 	Delete(id uint) error
@@ -62,7 +62,7 @@ type PostRepository interface {
 type PostUsecase interface {
 	Create(userID uint, req *CreatePostRequest) (*Post, error)
 	GetByID(id uint) (*Post, error)
-	GetAll(page, limit int) ([]Post, error)
+	GetAll(page, limit int, userID uint) ([]Post, error)
 	GetByUserID(userID uint) ([]Post, error)
 	Update(userID uint, postID uint, req *UpdatePostRequest) (*Post, error)
 	Delete(userID uint, postID uint) error
@@ -73,4 +73,7 @@ type PostUsecase interface {
 	GetSavedPosts(userID uint) ([]Post, error)
 	Report(userID, postID uint) error
 	Unreport(userID, postID uint) error
+	IsLikedByUser(userID uint, postID uint) (bool, error)
+	IsSavedByUser(userID uint, postID uint) (bool, error)
+	IsReportedByUser(userID uint, postID uint) (bool, error)
 }
