@@ -1,11 +1,21 @@
 package http
 
 import (
+	"fmt"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	"github.com/ruth987/CHub.git/internal/delivery/http/handler"
 )
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("⚠️ Warning: Could not load .env file, using system environment variables.")
+	}
+}
 
 func NewRouter(
 	userHandler *handler.UserHandler,
@@ -39,14 +49,13 @@ func NewRouter(
 		// Posts routes
 		posts := api.Group("/posts")
 		{
-			// Public post routes
-			posts.GET("", postHandler.GetAll)
-			posts.GET("/:id", postHandler.GetByID)
-			posts.GET("/:id/comments", commentHandler.GetByPostID)
 
 			// Protected post routes
 			protected := posts.Use(authMiddleware)
 			{
+				posts.GET("", postHandler.GetAll)
+				posts.GET("/:id", postHandler.GetByID)
+				posts.GET("/:id/comments", commentHandler.GetByPostID)
 				protected.POST("", postHandler.Create)
 				protected.PUT("/:id", postHandler.Update)
 				protected.DELETE("/:id", postHandler.Delete)
@@ -75,14 +84,13 @@ func NewRouter(
 
 		// Saved post routes
 		savedPosts := protected.Group("/saved-posts")
-		savedPosts.Use(authMiddleware)
 		{
 			savedPosts.POST("/:id", savedPostHandler.SavePost)
 			savedPosts.DELETE("/:id", savedPostHandler.UnsavePost)
 			savedPosts.GET("", savedPostHandler.GetSavedPosts)
 			savedPosts.GET("/:id/check", savedPostHandler.IsSaved)
 		}
+
 	}
 	return router
 }
-
