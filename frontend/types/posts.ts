@@ -7,11 +7,22 @@ export interface Post {
   image_url?: string
   link_url?: string
   likes: number
+  is_liked: boolean
+  is_saved: boolean
   comment_count: number
   user: User
   tags: string[] 
   created_at: string
   updated_at: string
+}
+
+export interface SavedPost {
+  id: number
+  user_id: number
+  post_id: number
+  created_at: string
+  updated_at: string
+  post: Post
 }
 
 export interface CreatePostRequest {

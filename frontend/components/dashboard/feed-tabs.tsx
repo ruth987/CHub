@@ -1,16 +1,25 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PostCard } from "@/components/posts/post-card"
 import { CreatePostButton } from "@/components/posts/create-post-button"
-import { Post } from "@/types/posts"
-
+import { Post, SavedPost } from "@/types/posts"
+import { Loader2 } from "lucide-react"
 
 interface FeedTabsProps {
   allPosts: Post[] | undefined
   userPosts: Post[] | undefined
+  savedPosts: SavedPost[] | undefined
   isLoading: boolean
 }
 
-export function FeedTabs({ allPosts, userPosts, isLoading }: FeedTabsProps) {
+export function FeedTabs({ allPosts, userPosts, savedPosts, isLoading }: FeedTabsProps) {
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    )
+  }
+
   return (
     <Tabs defaultValue="feed" className="w-full">
       <TabsList className="bg-gray-800">
@@ -24,21 +33,33 @@ export function FeedTabs({ allPosts, userPosts, isLoading }: FeedTabsProps) {
       </div>
 
       <TabsContent value="feed" className="space-y-4">
-        {allPosts?.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </TabsContent>
-      
-      <TabsContent value="my-posts">
-        <p className="text-gray-400">
-          {userPosts?.map((post) => (
+        {allPosts?.length === 0 ? (
+          <p className="text-center text-gray-400">No posts yet</p>
+        ) : (
+          allPosts?.map((post) => (
             <PostCard key={post.id} post={post} />
-          ))}
-        </p>
+          ))
+        )}
       </TabsContent>
       
-      <TabsContent value="saved">
-        <p className="text-gray-400">Your saved posts will appear here</p>
+      <TabsContent value="my-posts" className="space-y-4">
+        {userPosts?.length === 0 ? (
+          <p className="text-center text-gray-400">You haven't created any posts yet</p>
+        ) : (
+          userPosts?.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))
+        )}
+      </TabsContent>
+      
+      <TabsContent value="saved" className="space-y-4">
+        {savedPosts?.length === 0 ? (
+          <p className="text-center text-gray-400">No saved posts yet</p>
+        ) : (
+          savedPosts?.map((savedPost) => (
+            <PostCard key={savedPost.post_id} post={savedPost.post} />
+          ))
+        )}
       </TabsContent>
     </Tabs>
   )

@@ -6,6 +6,7 @@ import { FeedTabs } from "@/components/dashboard/feed-tabs"
 import { DailyVerse } from "@/components/dashboard/daily-verse"
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events"
 import { usePosts, useUserPosts } from "@/hooks/posts"
+import { useSavedPosts } from "@/hooks/saved-posts"
 import { useUser } from "@/hooks/auth"
 import  { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -56,9 +57,10 @@ export default function DashboardPage() {
     router.push('/login')
   }
 
-    // Fetch posts with the user's ID
+    // Fetch all types of posts
     const { data: posts = [], isLoading } = usePosts()
     const { data: userPosts = [], isLoading: isLoadingUserPosts } = useUserPosts(user?.id)
+    const { savedPosts, isLoadingSavedPosts } = useSavedPosts()
 
     console.log("userPosts", userPosts)
     console.log("posts", posts)
@@ -81,7 +83,12 @@ export default function DashboardPage() {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <FeedTabs allPosts={posts} userPosts={userPosts} isLoading={isLoading || isLoadingUserPosts} />
+            <FeedTabs 
+              allPosts={posts} 
+              userPosts={userPosts} 
+              savedPosts={savedPosts}
+              isLoading={isLoading || isLoadingUserPosts || isLoadingSavedPosts}
+            />
           </div>
           
           <div className="space-y-6">

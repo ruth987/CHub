@@ -64,12 +64,12 @@ export function PostDetail({ postId }: PostDetailProps) {
           <Avatar>
             <AvatarImage src={post.user.avatarUrl || ''} />
             <AvatarFallback>
-              {post.user.username?.[0]?.toUpperCase() || 'U'}
+              {post.user.username.charAt(0).toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <p className="text-sm font-medium text-white">
-              {post.user.username}
+              {post.user.username.charAt(0).toUpperCase() + post.user.username.slice(1)}
             </p>
             <p className="text-xs text-gray-400">
               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
