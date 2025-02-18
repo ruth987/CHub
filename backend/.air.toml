@@ -1,0 +1,24 @@
+root = "."
+tmp_dir = "tmp"
+
+build_cmd = "go build -v -o ./tmp/main ./cmd/api/main.go"
+run_cmd = "./tmp/main"
+
+[build]
+cmd = "go build -v -o ./tmp/main ./cmd/api/main.go"
+include_ext = ["go", "env", "mod"]
+include_dir = [
+    "cmd", 
+    "http", 
+    "initialize", 
+    "sqlc"
+]
+exclude_dir = [
+    "tmp",
+    ".git"
+]
+
+[log]
+time = true
+colors = true
+level = "debug"
