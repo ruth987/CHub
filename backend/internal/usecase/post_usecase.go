@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/ruth987/CHub.git/internal/domain"
@@ -69,7 +70,7 @@ func (u *postUsecase) GetByID(id uint) (*domain.Post, error) {
 	post.Likes = likes
 
 	// Get comments
-	comments, err := u.commentRepo.GetByPostID(id, 1, 100) 
+	comments, err := u.commentRepo.GetByPostID(id, 1, 100)
 	if err != nil {
 		return nil, err
 	}
@@ -78,30 +79,18 @@ func (u *postUsecase) GetByID(id uint) (*domain.Post, error) {
 	return post, nil
 }
 
-func (u *postUsecase) GetAll(page, limit int) ([]domain.Post, error) {
+func (u *postUsecase) GetAll(page, limit int, userID uint) ([]domain.Post, error) {
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
+	fmt.Println(" in post usecase userID", userID)
 
-	posts, err := u.postRepo.GetAll(page, limit)
+	posts, err := u.postRepo.GetAll(page, limit, userID)
 	if err != nil {
 		return nil, err
-	}
-
-	// Enrich posts with tags and likes
-	for i := range posts {
-		tags, err := u.postRepo.GetTags(posts[i].ID)
-		if err == nil {
-			posts[i].Tags = tags
-		}
-
-		likes, err := u.postRepo.GetLikes(posts[i].ID)
-		if err == nil {
-			posts[i].Likes = likes
-		}
 	}
 
 	return posts, nil
@@ -140,7 +129,6 @@ func (u *postUsecase) Update(userID uint, postID uint, req *domain.UpdatePostReq
 		return nil, err
 	}
 
-	// Update tags if provided
 	if len(req.Tags) > 0 {
 		err = u.postRepo.AddTags(post.ID, req.Tags)
 		if err != nil {
@@ -174,21 +162,32 @@ func (u *postUsecase) Unlike(userID uint, postID uint) error {
 }
 
 func (u *postUsecase) SavePost(userID, postID uint) error {
-    return u.postRepo.AddSave(postID, userID)
+	return u.postRepo.AddSave(postID, userID)
 }
 
 func (u *postUsecase) UnsavePost(userID, postID uint) error {
-    return u.postRepo.RemoveSave(postID, userID)
+	return u.postRepo.RemoveSave(postID, userID)
 }
 
 func (u *postUsecase) GetSavedPosts(userID uint) ([]domain.Post, error) {
-    return u.postRepo.GetSavedPosts(userID)
+	return u.postRepo.GetSavedPosts(userID)
 }
 
 func (u *postUsecase) Report(userID, postID uint) error {
-    return u.postRepo.AddReport(postID, userID)
+	return u.postRepo.AddReport(postID, userID)
 }
 
 func (u *postUsecase) Unreport(userID, postID uint) error {
-    return u.postRepo.RemoveReport(postID, userID)
+	return u.postRepo.RemoveReport(postID, userID)
+}
+func (u *postUsecase) IsLikedByUser(userID uint, postID uint) (bool, error) {
+	return u.postRepo.IsLikedByUser(postID, userID)
+}
+
+func (u *postUsecase) IsSavedByUser(userID uint, postID uint) (bool, error) {
+	return u.postRepo.IsSavedByUser(postID, userID)
+}
+
+func (u *postUsecase) IsReportedByUser(userID uint, postID uint) (bool, error) {
+	return u.postRepo.IsReportedByUser(postID, userID)
 }
