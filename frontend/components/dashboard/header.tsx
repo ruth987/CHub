@@ -75,17 +75,10 @@ export function DashboardHeader({ username }: HeaderProps) {
                 <Hand className="mr-2 h-4 w-4 text-yellow-500" />
                 <span>Prayer Requests</span>
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
-                onClick={() => router.push('/saved-posts')}
-              >
-                <Heart className="mr-2 h-4 w-4 text-yellow-500" />
-                <span>Saved Posts</span>
-              </DropdownMenuItem>
             </DropdownMenuGroup>
             
             <DropdownMenuSeparator className="bg-gray-700" />
-            <DropdownMenuGroup>
+            {/* <DropdownMenuGroup>
               <DropdownMenuItem 
                 className="cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
                 onClick={() => router.push('/settings')}
@@ -93,7 +86,7 @@ export function DashboardHeader({ username }: HeaderProps) {
                 <Settings className="mr-2 h-4 w-4 text-yellow-500" />
                 <span>Settings</span>
               </DropdownMenuItem>
-            </DropdownMenuGroup>
+            </DropdownMenuGroup> */}
             
             <DropdownMenuSeparator className="bg-gray-700" />
             <DropdownMenuItem 

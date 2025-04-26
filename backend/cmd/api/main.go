@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	httpDelivery "github.com/ruth987/CHub.git/internal/delivery/http"
 	"github.com/ruth987/CHub.git/internal/delivery/http/handler"
 	"github.com/ruth987/CHub.git/internal/repository/postgres"
@@ -44,18 +45,20 @@ func main() {
 	postRepo := postgres.NewPostRepository(db)
 	commentRepo := postgres.NewCommentRepository(db)
 	savedPostRepo := postgres.NewSavedPostRepository(db)
+	prayerRequestRepo := postgres.NewPrayerRequestRepository(db)
 
 	// Initialize usecases
 	userUsecase := usecase.NewUserUsecase(userRepo, jwtService)
 	postUsecase := usecase.NewPostUsecase(postRepo, commentRepo)
 	commentUsecase := usecase.NewCommentUsecase(commentRepo, postRepo)
 	savedPostUsecase := usecase.NewSavedPostUsecase(savedPostRepo, postRepo)
-
+	prayerRequestUsecase := usecase.NewPrayerRequestUsecase(prayerRequestRepo)
 	// Initialize handlers
 	userHandler := handler.NewUserHandler(userUsecase)
 	postHandler := handler.NewPostHandler(postUsecase)
 	commentHandler := handler.NewCommentHandler(commentUsecase)
 	savedPostHandler := handler.NewSavedPostHandler(savedPostUsecase)
+	prayerRequestHandler := handler.NewPrayerRequestHandler(prayerRequestUsecase)
 
 	// Setup router
 	router := httpDelivery.NewRouter(
@@ -64,6 +67,7 @@ func main() {
 		commentHandler,
 		savedPostHandler,
 		authMiddleware(jwtService),
+		prayerRequestHandler,
 	)
 
 	router.Run(":8080")

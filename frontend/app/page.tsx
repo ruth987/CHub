@@ -16,6 +16,7 @@ export default function Home() {
     <QuestionsSection />
     <CommunitySection />
     <CTASection />
+    
     <Footer />
   </main>
   );

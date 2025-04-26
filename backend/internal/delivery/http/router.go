@@ -23,6 +23,7 @@ func NewRouter(
 	commentHandler *handler.CommentHandler,
 	savedPostHandler *handler.SavedPostHandler,
 	authMiddleware gin.HandlerFunc,
+	prayerRequestHandler *handler.PrayerRequestHandler,
 
 ) *gin.Engine {
 	router := gin.Default()
@@ -46,10 +47,19 @@ func NewRouter(
 		api.POST("/register", userHandler.Register)
 		api.POST("/login", userHandler.Login)
 
+		// Prayer Request routes
+		prayerRequests := api.Group("/prayer-requests")
+		{
+			prayerRequests.POST("", prayerRequestHandler.Create)
+			prayerRequests.GET("/random", prayerRequestHandler.GetRandom)
+			prayerRequests.GET("/:id", prayerRequestHandler.GetByID)
+			prayerRequests.PUT("/:id", prayerRequestHandler.Update)
+			prayerRequests.DELETE("/:id", prayerRequestHandler.Delete)
+		}
+
 		// Posts routes
 		posts := api.Group("/posts")
 		{
-
 			// Protected post routes
 			protected := posts.Use(authMiddleware)
 			{
@@ -90,7 +100,6 @@ func NewRouter(
 			savedPosts.GET("", savedPostHandler.GetSavedPosts)
 			savedPosts.GET("/:id/check", savedPostHandler.IsSaved)
 		}
-
 	}
 	return router
 }
