@@ -1,10 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
 import api from '@/lib/axios'
 import { SavedPost } from '@/types/posts'
 
 export function useSavedPosts() {
   const queryClient = useQueryClient()
-  const token = localStorage.getItem('token')
+  const [token, setToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    setToken(localStorage.getItem('token'))
+  }, [])
 
   const { data: savedPosts = [], isLoading: isLoadingSavedPosts } = useQuery<SavedPost[]>({
     queryKey: ['saved-posts'],
@@ -15,7 +20,8 @@ export function useSavedPosts() {
 
       console.log("savedposts", response.data.saved_posts)
       return response.data.saved_posts
-    }
+    },
+    enabled: !!token
   })
 
   const { mutate: savePost } = useMutation({

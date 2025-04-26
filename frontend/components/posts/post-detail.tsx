@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -17,10 +17,9 @@ import Image from "next/image"
 import { formatDistanceToNow } from 'date-fns'
 import { useUser } from "@/hooks/auth"
 import { CommentCard } from "@/components/comments/comment-card"
-import { Separator } from "@/components/ui/separator"
 import api from "@/lib/axios"
 import { CommentSection } from "../comments/comment-section"
-
+import { Comment } from "@/types/comment"
 interface PostDetailProps {
   postId: string
 }
@@ -28,17 +27,23 @@ interface PostDetailProps {
 export function PostDetail({ postId }: PostDetailProps) {
   const { user } = useUser()
   const [showComments, setShowComments] = useState(true)
+  const [token, setToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    setToken(localStorage.getItem('token'))
+  }, [])
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ['posts', postId],
     queryFn: async () => {
       const response = await api.get(`/posts/${postId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${token}`
         }
       })
       return response.data
-    }
+    },
+    enabled: !!token
   })
 
   if (isLoading) {
@@ -189,7 +194,7 @@ export function PostDetail({ postId }: PostDetailProps) {
             Comments ({post.comments?.length})
           </h2>
           {console.log("comments", post.comments)}
-          {post.comments?.map((comment: any) => (
+          {post.comments?.map((comment: Comment) => (
             <CommentCard key={comment.id} comment={comment} postId={post.id} />
           ))}
         </div>

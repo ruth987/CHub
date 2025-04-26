@@ -1,10 +1,9 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 
 interface User {
-  accessToken: any
+  accessToken: string 
   id: string
   name: string
   email: string
@@ -26,7 +25,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
 
   useEffect(() => {
     // Check for existing session
@@ -48,20 +46,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string) => {
-    // Implement login logic
+  const login = async (_email: string, _password: string) => {
+    console.log("login", _email, _password)
   }
 
-  const loginAnonymously = async (displayName: string) => {
-    // Implement anonymous login logic
+  const loginAnonymously = async (_displayName: string) => {
+    console.log("loginAnonymously", _displayName)
   }
 
-  const signup = async (email: string, password: string, name: string) => {
-    // Implement signup logic
+  const signup = async (_email: string, _password: string, _name: string) => {
+    console.log("signup", _email, _password, _name)
   }
 
   const logout = async () => {
-    // Implement logout logic
+    console.log("logout")
   }
 
   return (

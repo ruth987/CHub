@@ -25,7 +25,7 @@ export function QuestionsSection() {
             Community Discussions
           </h2>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Join meaningful discussions about faith, scripture, and life's challenges.
+            Join meaningful discussions about faith, scripture, and life&apos;s challenges.
           </p>
         </div>
 

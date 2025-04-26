@@ -5,12 +5,12 @@ import { useUserPosts } from "@/hooks/posts"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { CalendarDays, Mail, ScrollText, Grid } from "lucide-react"
-import { format } from "date-fns"
+import {  Mail, ScrollText, Grid } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import Image from "next/image"
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -89,11 +89,12 @@ export default function ProfilePage() {
                 <Link href={`/posts/${post.id}`} key={post.id}>
                   <Card className="group hover:border-yellow-500 transition-all duration-300 overflow-hidden bg-gray-800/50 border-gray-700">
                     {post.image_url && (
-                      <div className="aspect-square w-full overflow-hidden">
-                        <img
+                      <div className="aspect-square w-full overflow-hidden relative">
+                        <Image
                           src={post.image_url}
                           alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     )}

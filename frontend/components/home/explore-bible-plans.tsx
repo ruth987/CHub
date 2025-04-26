@@ -1,6 +1,5 @@
 import { BiblePlansList } from "@/components/bible-plans/bible-plans-list"
 import { BiblePlansHeader } from "@/components/bible-plans/bible-plans-header"
-import Image from "next/image"
 
 export default function ExploreBiblePlans() {
   return (

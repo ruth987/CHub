@@ -3,13 +3,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import Image from "next/image"
 import { MessageCircle, Heart, Share, BookmarkPlus } from "lucide-react"
 import { Post } from "@/types/posts"
 import { formatDistanceToNow } from "date-fns"
 import { usePostInteractions } from "@/hooks/post-interactions"
 import { useSavedPosts } from "@/hooks/saved-posts"
 import { useState } from "react"
+import Image from "next/image"
 
 interface PostCardProps {
   post: Post
@@ -97,10 +97,12 @@ export function PostCard({ post }: PostCardProps) {
         
         {post.image_url && (
           <div className="mt-4">
-            <img 
-              src={post.image_url} 
+            <Image
+              src={post.image_url}
               alt={post.title}
-              className="rounded-lg w-full" 
+              width={800}
+              height={600}
+              className="rounded-lg w-full"
             />
           </div>
         )}

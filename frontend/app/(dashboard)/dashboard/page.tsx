@@ -52,10 +52,11 @@ export default function DashboardPage() {
       behavior: 'smooth'
     })
   }
-
-  if (!localStorage.getItem('token')) {
-    router.push('/login')
-  }
+  useEffect(() => {
+    if (!localStorage.getItem('token')) {
+      router.push('/login')
+    }
+  }, [router])
 
     // Fetch all types of posts
     const { data: posts = [], isLoading } = usePosts()

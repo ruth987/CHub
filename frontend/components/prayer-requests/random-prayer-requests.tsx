@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Loader2, RefreshCw } from "lucide-react"
@@ -15,15 +15,22 @@ interface PrayerRequest {
 export function RandomPrayerRequests() {
   const [prayers, setPrayers] = useState<PrayerRequest[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
   const { toast } = useToast()
 
-  const fetchRandomPrayers = async () => {
+  useEffect(() => {
+    setToken(localStorage.getItem('token'))
+  }, [])
+
+  const fetchRandomPrayers = useCallback(async () => {
+    if (!token) return
+
     setIsLoading(true)
     try {
       const response = await fetch('http://localhost:8080/api/prayer-requests/random?limit=3', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       })
@@ -33,7 +40,7 @@ export function RandomPrayerRequests() {
 
       const data = await response.json()
       setPrayers(data.prayer_requests)
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to fetch prayer requests. Please try again. ",
@@ -42,12 +49,12 @@ export function RandomPrayerRequests() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [toast, token])
 
   // Fetch prayers on component mount
   useEffect(() => {
     fetchRandomPrayers()
-  }, [])
+  }, [fetchRandomPrayers])
 
   return (
     <div className="space-y-4">

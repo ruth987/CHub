@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { CommentList } from "@/components/comments/comment-list"
 import { CommentForm } from "@/components/comments/comment-form"
 import { Button } from "@/components/ui/button"
 import { ArrowDown, ArrowUp } from "lucide-react"

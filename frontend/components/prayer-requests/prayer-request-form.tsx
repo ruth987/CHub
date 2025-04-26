@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
@@ -9,7 +9,12 @@ import { Loader2 } from "lucide-react"
 export function PrayerRequestForm() {
   const [request, setRequest] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
   const { toast } = useToast()
+
+  useEffect(() => {
+    setToken(localStorage.getItem('token'))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,7 +26,7 @@ export function PrayerRequestForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ content: request })
       })
@@ -35,7 +40,7 @@ export function PrayerRequestForm() {
       })
 
       setRequest("")
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to submit prayer request. Please try again.",

@@ -44,7 +44,7 @@ export function FeedTabs({ allPosts, userPosts, savedPosts, isLoading }: FeedTab
       
       <TabsContent value="my-posts" className="space-y-4">
         {userPosts?.length === 0 ? (
-          <p className="text-center text-gray-400">You haven't created any posts yet</p>
+          <p className="text-center text-gray-400">You haven&apos;t created any posts yet</p>
         ) : (
           userPosts?.map((post) => (
             <PostCard key={post.id} post={post} />

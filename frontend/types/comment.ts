@@ -3,8 +3,8 @@ import { User } from "./auth"
 export interface Comment {
     id: number
     content: string
-    user_id: number
-    post_id: number
+    user_id?: number
+    post_id?: number
     parent_id?: number
     user: User
     replies?: Comment[]

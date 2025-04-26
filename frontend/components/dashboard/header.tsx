@@ -1,4 +1,4 @@
-import { Bell, User, BookOpen, Settings, LogOut, Heart, Hand } from "lucide-react"
+import { Bell, User, BookOpen, LogOut, Hand } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {

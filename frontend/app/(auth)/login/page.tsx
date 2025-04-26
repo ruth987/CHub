@@ -56,7 +56,7 @@ export default function LoginPage() {
                     </Tabs>
 
                     <div className="mt-6 text-center text-sm">
-                        <span className="text-gray-400">Don't have an account? </span>
+                        <span className="text-gray-400">Don&apos;t have an account? </span>
                         <Link href="/signup" className="text-yellow-400 hover:text-yellow-300">
                             Sign up
                         </Link>

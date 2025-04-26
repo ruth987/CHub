@@ -36,7 +36,7 @@ const formSchema = z.object({
 
 export function SignUpForm() {
   const router = useRouter();
-  const { mutate: signup, isPending } = useSignup();
+  const { mutate: signup } = useSignup();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

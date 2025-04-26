@@ -1,9 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
 import api from '@/lib/axios'
 
 export function usePostInteractions() {
   const queryClient = useQueryClient()
-  const token = localStorage.getItem('token')
+  const [token, setToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    setToken(localStorage.getItem('token'))
+  }, [])
 
   const { mutate: likePost } = useMutation({
     mutationFn: async (postId: number) => {
