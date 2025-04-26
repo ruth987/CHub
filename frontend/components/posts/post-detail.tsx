@@ -19,6 +19,7 @@ import { useUser } from "@/hooks/auth"
 import { CommentCard } from "@/components/comments/comment-card"
 import { Separator } from "@/components/ui/separator"
 import api from "@/lib/axios"
+import { CommentSection } from "../comments/comment-section"
 
 interface PostDetailProps {
   postId: string
@@ -181,7 +182,8 @@ export function PostDetail({ postId }: PostDetailProps) {
       </Card>
 
       Comments Section
-      {showComments && (
+      <CommentSection postId={postId} />
+      {showComments && post.comments?.length > 0 && (
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-white mb-6">
             Comments ({post.comments?.length})

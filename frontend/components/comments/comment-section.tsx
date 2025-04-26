@@ -21,21 +21,20 @@ export function CommentSection({ postId }: CommentSectionProps) {
           variant="ghost"
           size="sm"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-gray-400 hover:text-white"
+          className="text-gray-400 hover:text-white hover:bg-gray-700"
         >
           {isExpanded ? (
-            <ArrowUp className="w-4 h-4 mr-2" />
+            <ArrowUp className="w-4 h-4" />
           ) : (
-            <ArrowDown className="w-4 h-4 mr-2" />
+            <ArrowDown className="w-4 h-4" />
           )}
-          {isExpanded ? "Hide Comments" : "Show Comments"}
+          {isExpanded ? "" : ""}
         </Button>
       </div>
 
       {isExpanded && (
         <>
-          <CommentForm postId={postId} />
-          <CommentList postId={postId} />
+          <CommentForm postId={parseInt(postId)} />
         </>
       )}
     </div>

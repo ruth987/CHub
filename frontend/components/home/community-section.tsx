@@ -3,12 +3,41 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const COMMUNITY_MEMBERS = [
   {
-    name: "Rev. Michael Brown",
+    name: "Ruth Wossen",
     role: "Biblical Scholar",
     image: "/avatars/michael.jpg",
-    initials: "MB",
+    initials: "RW",
     description: "PhD in Biblical Studies, helping members understand scripture deeply."
   },
+  {
+    name: "Yidnekachew Tebeje",
+    role: "Biblical Scholar",
+    image: "/avatars/michael.jpg",
+    initials: "YT",
+    description: "PhD in Biblical Studies, helping members understand scripture deeply."
+  },
+  {
+    name: "Yohannes Getachew",
+    role: "Biblical Scholar",
+    image: "/avatars/michael.jpg",
+    initials: "YG",
+    description: "PhD in Biblical Studies, helping members understand scripture deeply."
+  },
+  {
+    name: "Saron Meseret",
+    role: "Biblical Scholar",
+    image: "/avatars/michael.jpg",
+    initials: "SM",
+    description: "PhD in Biblical Studies, helping members understand scripture deeply."
+  },
+  {
+    name: "Samuel Mulugheta",
+    role: "Biblical Scholar",
+    image: "/avatars/michael.jpg",
+    initials: "SM",
+    description: "PhD in Biblical Studies, helping members understand scripture deeply."
+  },
+
 ]
 
 export function CommunitySection() {
