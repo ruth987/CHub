@@ -27,7 +27,7 @@ export function RandomPrayerRequests() {
 
     setIsLoading(true)
     try {
-      const response = await fetch('http://localhost:8080/api/prayer-requests/random?limit=3', {
+      const response = await fetch('http://51.21.236.223:8080/api/prayer-requests/random?limit=3', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

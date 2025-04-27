@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 export const useLogin = () => {
     return useMutation({
         mutationFn: async (data: LoginRequest) => {
+            console.log('login data:', data);
             const response = await api.post<LoginResponse>('/login', data);
             return response.data;
         },
@@ -26,7 +27,7 @@ export const useSignup = () => {
         mutationFn: async (data: RegisterRequest) => {
             try {
                 const response = await api.post<LoginResponse>('/register', data);
-                return response.data;
+                return response.data; 
             } catch (error: any) {
                 toast.error(error.response?.data?.error || 'Registration failed');
                 console.log('signup error:', error);
@@ -71,6 +72,5 @@ export const useUser = () => {
   
     return { user }
   }
-
 
   
