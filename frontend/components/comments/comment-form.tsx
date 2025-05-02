@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
 import { useCreateComment } from "@/hooks/comments"
+import { Comment } from "@/types/comment"
 
 const formSchema = z.object({
   content: z.string().min(1, "Comment cannot be empty"),
@@ -21,10 +22,10 @@ const formSchema = z.object({
 interface CommentFormProps {
   postId: number
   parentId?: number
-  onSuccess?: () => void
+  onNewComment?: (comment: Comment) => void
 }
 
-export function CommentForm({ postId, parentId, onSuccess }: CommentFormProps) {
+export function CommentForm({ postId, parentId, onNewComment }: CommentFormProps) {
   const { mutate: createComment, isPending } = useCreateComment()
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -40,9 +41,9 @@ export function CommentForm({ postId, parentId, onSuccess }: CommentFormProps) {
       postId,
       parentId
     }, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         form.reset()
-        onSuccess?.()
+        onNewComment?.(data)
       }
     })
   }

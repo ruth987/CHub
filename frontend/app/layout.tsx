@@ -1,5 +1,6 @@
 import { Providers } from "./providers"
-import "./globals.css"  // Add this import
+import "./globals.css"  
+import GoogleAnalytics from '@/components/GoogleAnalytics'
 
 export default function RootLayout({
   children,
@@ -9,6 +10,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <GoogleAnalytics />
         <Providers>
           {children}
         </Providers>

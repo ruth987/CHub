@@ -4,12 +4,14 @@ import { useState } from "react"
 import { CommentForm } from "@/components/comments/comment-form"
 import { Button } from "@/components/ui/button"
 import { ArrowDown, ArrowUp } from "lucide-react"
+import { Comment } from "@/types/comment"
 
 interface CommentSectionProps {
   postId: string
+  onNewComment: (comment: Comment) => void
 }
 
-export function CommentSection({ postId }: CommentSectionProps) {
+export function CommentSection({ postId, onNewComment }: CommentSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true)
 
   return (
@@ -27,13 +29,13 @@ export function CommentSection({ postId }: CommentSectionProps) {
           ) : (
             <ArrowDown className="w-4 h-4" />
           )}
-          {isExpanded ? "" : ""}
+          {isExpanded ? "Hide" : "Show"}
         </Button>
       </div>
 
       {isExpanded && (
         <>
-          <CommentForm postId={parseInt(postId)} />
+          <CommentForm postId={parseInt(postId)} onNewComment={onNewComment} />
         </>
       )}
     </div>

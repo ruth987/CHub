@@ -149,7 +149,7 @@ export function CommentCard({ comment, postId, isReply = false }: CommentCardPro
           <CommentForm
             postId={postId}
             parentId={comment.id}
-            onSuccess={() => setIsReplying(false)}
+            onNewComment={() => setIsReplying(false)}
           />
         </div>
       )}

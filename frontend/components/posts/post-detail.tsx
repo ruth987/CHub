@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,25 @@ import { CommentCard } from "@/components/comments/comment-card"
 import api from "@/lib/axios"
 import { CommentSection } from "../comments/comment-section"
 import { Comment } from "@/types/comment"
+
+interface Post {
+  id: number
+  title: string
+  content: string
+  image_url?: string
+  link_url?: string
+  created_at: string
+  likes: number
+  comment_count: number
+  tags?: string[]
+  comments?: Comment[]
+  user: {
+    id: number
+    username: string
+    avatarUrl?: string
+  }
+}
+
 interface PostDetailProps {
   postId: string
 }
@@ -28,12 +47,13 @@ export function PostDetail({ postId }: PostDetailProps) {
   const { user } = useUser()
   const [showComments, setShowComments] = useState(true)
   const [token, setToken] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     setToken(localStorage.getItem('token'))
   }, [])
 
-  const { data: post, isLoading, error } = useQuery({
+  const { data: post, isLoading, error } = useQuery<Post>({
     queryKey: ['posts', postId],
     queryFn: async () => {
       const response = await api.get(`/posts/${postId}`, {
@@ -45,6 +65,17 @@ export function PostDetail({ postId }: PostDetailProps) {
     },
     enabled: !!token
   })
+
+  const handleNewComment = (newComment: Comment) => {
+    queryClient.setQueryData<Post>(['posts', postId], (oldData) => {
+      if (!oldData) return oldData
+      return {
+        ...oldData,
+        comments: [...(oldData.comments || []), newComment],
+        comment_count: (oldData.comment_count || 0) + 1
+      }
+    })
+  }
 
   if (isLoading) {
     return (
@@ -187,14 +218,13 @@ export function PostDetail({ postId }: PostDetailProps) {
       </Card>
 
       Comments Section
-      <CommentSection postId={postId} />
-      {showComments && post.comments?.length > 0 && (
+      <CommentSection postId={postId} onNewComment={handleNewComment} />
+      {showComments && post.comments && post.comments.length > 0 && (
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-white mb-6">
-            Comments ({post.comments?.length})
+            Comments ({post.comments.length})
           </h2>
-          {console.log("comments", post.comments)}
-          {post.comments?.map((comment: Comment) => (
+          {post.comments.map((comment: Comment) => (
             <CommentCard key={comment.id} comment={comment} postId={post.id} />
           ))}
         </div>
