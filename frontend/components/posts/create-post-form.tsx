@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useCreatePost } from "@/hooks/posts"
+import { useState } from "react"
 
 // Update schema to match your API types
 const formSchema = z.object({
@@ -34,6 +35,7 @@ interface CreatePostFormProps {
 
 export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
   const createPost = useCreatePost()
+  const [isUploading, setIsUploading] = useState(false)
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,6 +48,47 @@ export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
       tags: "",
     },
   })
+
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'f3aubt1e');
+
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/dihqczuhh/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image to Cloudinary');
+      }
+
+      const data = await response.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error('Cloudinary upload error:', error);
+      throw error;
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const imageUrl = await uploadToCloudinary(file);
+      form.setValue('image_url', imageUrl);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -113,14 +156,27 @@ export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
           name="image_url"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-white">Image URL (optional)</FormLabel>
+              <FormLabel className="text-white">Image Upload</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="https://..."
-                  {...field}
-                  className="bg-gray-700 border-gray-600 text-white"
-                  disabled={createPost.isPending}
-                />
+                <div className="space-y-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="bg-gray-700 border-gray-600 text-white"
+                    disabled={createPost.isPending || isUploading}
+                  />
+                  {isUploading && <p className="text-sm text-yellow-500">Uploading image...</p>}
+                  {field.value && (
+                    <div className="mt-2">
+                      <img src={field.value} alt="Preview" className="max-w-[200px] rounded" />
+                    </div>
+                  )}
+                  <Input
+                    type="hidden"
+                    {...field}
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -198,11 +254,10 @@ export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
           <Button 
             type="submit" 
             className="bg-yellow-500 text-gray-900 hover:bg-yellow-400"
-            disabled={createPost.isPending}
+            disabled={createPost.isPending || isUploading}
           >
             {createPost.isPending ? (
               <>
-            
                 Creating...
               </>
             ) : (
