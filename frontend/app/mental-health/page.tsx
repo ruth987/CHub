@@ -10,7 +10,7 @@ export default function MentalHealthPage() {
                 <div className="text-center space-y-6">
                     <h1 className="text-5xl font-bold text-white tracking-tight">Mental Health Support</h1>
                     <p className="text-gray-300 max-w-2xl mx-auto text-lg leading-relaxed">
-                        Your mental health matters. We're here to support you through your academic journey.
+                        Your mental health matters. We&apos;re here to support you through your academic journey.
                         Schedule a confidential session with our trained counselors.
                     </p>
                 </div>
@@ -85,7 +85,7 @@ export default function MentalHealthPage() {
                 <div className="mt-12 text-center bg-gray-800/30 p-8 rounded-xl border border-gray-700/50">
                     <h2 className="text-3xl font-semibold text-white mb-6">Emergency Support</h2>
                     <p className="text-gray-300 mb-6 text-lg">
-                        If you're experiencing a mental health emergency, please contact:
+                        If you&apos;re experiencing a mental health emergency, please contact:
                     </p>
                     <div className="space-y-4">
                         <p className="text-orange-500 font-semibold text-xl">National Crisis Hotline: 988</p>

@@ -1,4 +1,4 @@
-import { Bell, User, BookOpen, LogOut, Hand } from "lucide-react"
+import {  User, BookOpen, LogOut, Hand, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -26,7 +26,9 @@ export function DashboardHeader({ username }: HeaderProps) {
     logout()
     router.push('/login')
   }
-
+  const navigateToMentalHealth = () => {
+    router.push('/mental-health')
+  }
   return (
     <div className="flex justify-between items-center">
       <div>
@@ -34,12 +36,13 @@ export function DashboardHeader({ username }: HeaderProps) {
         <p className="text-gray-400">Welcome back, {username.charAt(0).toUpperCase() + username.slice(1)}!</p>
       </div>
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5 text-white" />
-          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-yellow-500 text-xs flex items-center justify-center text-black">
-            3
-          </span>
-        </Button>
+      <Button
+            onClick={navigateToMentalHealth}
+            className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <Calendar className="w-5 h-5" />
+            Schedule Support Session
+          </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

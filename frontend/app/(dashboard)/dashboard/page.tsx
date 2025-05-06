@@ -31,7 +31,6 @@ const mockData = {
   },
 }
 
-
 export default function DashboardPage() {
   const router = useRouter()
   const { user } = useUser()
@@ -52,6 +51,8 @@ export default function DashboardPage() {
       behavior: 'smooth'
     })
   }
+
+
   useEffect(() => {
     if (!localStorage.getItem('token')) {
       router.push('/login')
@@ -79,7 +80,10 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-900">
       <div className="container mx-auto p-6 space-y-8">
-        <DashboardHeader username={user?.username} />
+        
+          <DashboardHeader username={user?.username} />
+          
+          
         <StatsGrid />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

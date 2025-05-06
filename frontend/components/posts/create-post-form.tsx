@@ -17,15 +17,15 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useCreatePost } from "@/hooks/posts"
 import { useState } from "react"
+import Image from "next/image"
 
-// Update schema to match your API types
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   content: z.string().min(10, "Content must be at least 10 characters"),
-  image_url: z.string().optional(), // Changed from imageUrl to match API
-  link_url: z.string().url().optional().or(z.literal("")), // Changed from linkUrl to match API
-  is_anonymous: z.boolean().default(false), // Changed from isAnonymous to match API
-  tags: z.string().optional(), // Changed to string for comma-separated input
+  image_url: z.string().optional(), 
+  link_url: z.string().url().optional().or(z.literal("")), 
+  is_anonymous: z.boolean().default(false), 
+  tags: z.string().optional(), 
 })
 
 interface CreatePostFormProps {
@@ -92,12 +92,9 @@ export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      // Transform the form data to match the API expectations
       const postData = {
         ...values,
-        // Convert comma-separated string to array and trim whitespace
         tags: values.tags ? values.tags.split(',').map(tag => tag.trim()) : [],
-        // Only include optional fields if they have values
         image_url: values.image_url || undefined,
         link_url: values.link_url || undefined,
       }
@@ -169,7 +166,7 @@ export function CreatePostForm({ onSuccess, onCancel }: CreatePostFormProps) {
                   {isUploading && <p className="text-sm text-yellow-500">Uploading image...</p>}
                   {field.value && (
                     <div className="mt-2">
-                      <img src={field.value} alt="Preview" className="max-w-[200px] rounded" />
+                      <Image src={field.value} alt="Preview" className="max-w-[200px] rounded" />
                     </div>
                   )}
                   <Input
