@@ -275,7 +275,7 @@ func (r *postRepository) GetAll(page, limit int, userID uint) ([]domain.Post, er
 		JOIN users u ON p.user_id = u.id
 		ORDER BY p.created_at DESC
 		LIMIT $1 OFFSET $2`
-	rows, err = r.db.Query(query, limit, offset)
+		rows, err = r.db.Query(query, limit, offset)
 	}
 	fmt.Println("userid", userID)
 

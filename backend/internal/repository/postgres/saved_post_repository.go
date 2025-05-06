@@ -68,7 +68,6 @@ func (r *savedPostRepository) GetByUserID(userID uint) ([]domain.SavedPost, erro
         ORDER BY sp.created_at DESC
     `
 
-
 	rows, err := r.db.Query(query, userID)
 	if err != nil {
 		log.Printf("Query error: %v", err)
