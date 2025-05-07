@@ -7,14 +7,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ruth987/CHub.git/internal/domain"
+	"github.com/ruth987/CHub.git/internal/services/s3"
 )
 
 type UserHandler struct {
 	userUsecase domain.UserUsecase
+	s3Service   *s3.Service
 }
 
-func NewUserHandler(userUsecase domain.UserUsecase) *UserHandler {
-	return &UserHandler{userUsecase: userUsecase}
+func NewUserHandler(userUsecase domain.UserUsecase, s3Service *s3.Service) *UserHandler {
+	return &UserHandler{
+		userUsecase: userUsecase,
+		s3Service:   s3Service,
+	}
 }
 
 func (h *UserHandler) Register(c *gin.Context) {
@@ -28,6 +33,13 @@ func (h *UserHandler) Register(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Log signup activity to S3
+	details := fmt.Sprintf("New user registered with email: %s", req.Email)
+	_, err = h.s3Service.LogUserActivity(c.Request.Context(), user.Username, "signup", details)
+	if err != nil {
+		fmt.Printf("Failed to log signup activity to S3: %v\n", err)
 	}
 
 	c.JSON(http.StatusCreated, user)
@@ -45,6 +57,13 @@ func (h *UserHandler) Login(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Log login activity to S3
+	details := fmt.Sprintf("User logged in with email: %s", req.Email)
+	_, err = h.s3Service.LogUserActivity(c.Request.Context(), response.User.Username, "login", details)
+	if err != nil {
+		fmt.Printf("Failed to log login activity to S3: %v\n", err)
 	}
 
 	c.JSON(http.StatusOK, response)

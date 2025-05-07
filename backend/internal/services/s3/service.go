@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -68,6 +69,58 @@ func (s *Service) UploadFile(ctx context.Context, file *multipart.FileHeader, fo
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to upload to S3: %w", err)
+	}
+
+	// Generate the URL for the uploaded file
+	url := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", BucketName, Region, key)
+	return url, nil
+}
+
+// UploadPostBackup uploads a post as JSON to S3 for backup purposes
+func (s *Service) UploadPostBackup(ctx context.Context, postData []byte, postID string) (string, error) {
+	// Generate a unique filename with timestamp
+	timestamp := time.Now().UnixNano()
+	key := fmt.Sprintf("backups/posts/post-%d-%s.json", timestamp, postID)
+
+	// Upload to S3
+	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(BucketName),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(postData),
+		ContentType: aws.String("application/json"),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to upload post backup to S3: %w", err)
+	}
+
+	// Generate the URL for the uploaded file
+	url := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", BucketName, Region, key)
+	return url, nil
+}
+
+// LogUserActivity uploads a user activity log to S3
+func (s *Service) LogUserActivity(ctx context.Context, username string, activityType string, details string) (string, error) {
+	// Generate timestamp and filename
+	timestamp := time.Now().UnixNano()
+	key := fmt.Sprintf("logs/%s/%s_%d.txt", activityType, username, timestamp)
+
+	// Create log content
+	logContent := fmt.Sprintf("Timestamp: %s\nUsername: %s\nActivity: %s\nDetails: %s\n",
+		time.Now().Format(time.RFC3339),
+		username,
+		activityType,
+		details,
+	)
+
+	// Upload to S3
+	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(BucketName),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader([]byte(logContent)),
+		ContentType: aws.String("text/plain"),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to upload user activity log to S3: %w", err)
 	}
 
 	// Generate the URL for the uploaded file

@@ -54,18 +54,19 @@ func main() {
 	commentUsecase := usecase.NewCommentUsecase(commentRepo, postRepo)
 	savedPostUsecase := usecase.NewSavedPostUsecase(savedPostRepo, postRepo)
 	prayerRequestUsecase := usecase.NewPrayerRequestUsecase(prayerRequestRepo)
-	// Initialize handlers
-	userHandler := handler.NewUserHandler(userUsecase)
-	postHandler := handler.NewPostHandler(postUsecase)
-	commentHandler := handler.NewCommentHandler(commentUsecase)
-	savedPostHandler := handler.NewSavedPostHandler(savedPostUsecase)
-	prayerRequestHandler := handler.NewPrayerRequestHandler(prayerRequestUsecase)
 
 	// Initialize S3 service
 	s3Service, err := s3.NewService()
 	if err != nil {
 		log.Fatalf("Failed to initialize S3 service: %v", err)
 	}
+
+	// Initialize handlers
+	userHandler := handler.NewUserHandler(userUsecase, s3Service)
+	postHandler := handler.NewPostHandler(postUsecase, s3Service)
+	commentHandler := handler.NewCommentHandler(commentUsecase)
+	savedPostHandler := handler.NewSavedPostHandler(savedPostUsecase)
+	prayerRequestHandler := handler.NewPrayerRequestHandler(prayerRequestUsecase)
 
 	// Initialize upload handler
 	uploadHandler := handler.NewUploadHandler(s3Service)

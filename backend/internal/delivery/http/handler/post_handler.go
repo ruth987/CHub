@@ -1,21 +1,25 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ruth987/CHub.git/internal/domain"
+	"github.com/ruth987/CHub.git/internal/services/s3"
 )
 
 type PostHandler struct {
 	postUsecase domain.PostUsecase
+	s3Service   *s3.Service
 }
 
-func NewPostHandler(pu domain.PostUsecase) *PostHandler {
+func NewPostHandler(pu domain.PostUsecase, s3Service *s3.Service) *PostHandler {
 	return &PostHandler{
 		postUsecase: pu,
+		s3Service:   s3Service,
 	}
 }
 
@@ -38,6 +42,19 @@ func (h *PostHandler) Create(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Backup post to S3
+	postJSON, err := json.Marshal(post)
+	if err != nil {
+		fmt.Printf("Failed to marshal post for backup: %v\n", err)
+	} else {
+		backupURL, err := h.s3Service.UploadPostBackup(c.Request.Context(), postJSON, fmt.Sprintf("%d", post.ID))
+		if err != nil {
+			fmt.Printf("Failed to backup post to S3: %v\n", err)
+		} else {
+			fmt.Printf("Post backed up to S3: %s\n", backupURL)
+		}
 	}
 
 	c.JSON(http.StatusCreated, post)
